@@ -1,0 +1,177 @@
+/* ============================================================
+   Borderless — i18n (ported from design_handoff/i18n.js)
+   UI strings for the EN / JP toggle. Content strings (event copy)
+   live in data.ts as { en, jp } pairs.
+   Default language: English.
+   ============================================================ */
+
+import type { Lang, Bilingual } from "./types";
+
+type Dict = Record<string, Bilingual>;
+
+const S: Dict = {
+  // shell
+  public: { en: "Public Site", jp: "公開サイト" },
+  member: { en: "Member", jp: "メンバー" },
+  admin: { en: "Admin", jp: "管理" },
+  tagline: { en: "Kyoto-Based Cultural Gathering", jp: "京都発・国際交流サークル" },
+
+  // public — feed
+  upcoming: { en: "Upcoming", jp: "今後の予定" },
+  past: { en: "Past Events", jp: "過去のイベント" },
+  allEvents: { en: "All", jp: "すべて" },
+  heroTitle: { en: "Meet Kyoto.\nTogether.", jp: "京都を、\nみんなで。" },
+  heroSub: {
+    en: "An international circle hosting a new gathering every week — temples, ramen, rooftops and riverbanks. Come as you are.",
+    jp: "毎週新しい集まりを開く国際サークル。お寺、ラーメン、ルーフトップ、川辺へ。気軽にどうぞ。",
+  },
+  joinFree: { en: "Join free", jp: "無料で参加" },
+  browse: { en: "See events", jp: "イベントを見る" },
+  thisWeek: { en: "This week", jp: "今週" },
+  spotsLeft: { en: "spots left", jp: "残り" },
+  full: { en: "Full", jp: "満員" },
+  free: { en: "Free", jp: "無料" },
+  members100: { en: "100 members", jp: "メンバー100名" },
+  weekly: { en: "Weekly events", jp: "毎週開催" },
+
+  // event detail
+  imComing: { en: "I'm coming", jp: "参加する" },
+  youreIn: { en: "You're in ✓", jp: "参加予定 ✓" },
+  cantMake: { en: "Can't make it", jp: "不参加" },
+  about: { en: "About this event", jp: "イベント詳細" },
+  whereWhen: { en: "Where & when", jp: "日時・場所" },
+  getThere: { en: "Getting there", jp: "アクセス" },
+  whoscoming: { en: "Who's coming", jp: "参加メンバー" },
+  recap: { en: "Recap", jp: "レポート" },
+  photos: { en: "photos", jp: "枚の写真" },
+  earnPt: { en: "Earn", jp: "獲得" },
+  point: { en: "point", jp: "ポイント" },
+  points: { en: "points", jp: "ポイント" },
+  perPerson: { en: "per person", jp: "/ 人" },
+  addCal: { en: "Add to calendar", jp: "カレンダーに追加" },
+  share: { en: "Share", jp: "共有" },
+
+  // auth
+  welcome: { en: "Welcome back", jp: "おかえりなさい" },
+  joinTitle: { en: "Join Borderless", jp: "ボーダレスに参加" },
+  email: { en: "Email", jp: "メールアドレス" },
+  password: { en: "Password", jp: "パスワード" },
+  name: { en: "Your name", jp: "お名前" },
+  signIn: { en: "Sign in", jp: "ログイン" },
+  createAcc: { en: "Create account", jp: "アカウント作成" },
+  noAccount: { en: "New here?", jp: "初めての方は" },
+  haveAccount: { en: "Already a member?", jp: "登録済みの方は" },
+  or: { en: "or", jp: "または" },
+  continueG: { en: "Continue with Google", jp: "Googleで続行" },
+  authPerk: {
+    en: "Track your points, RSVP in one tap, and unlock rewards.",
+    jp: "ポイントを貯めて、ワンタップで参加表明、特典をゲット。",
+  },
+
+  // member dashboard
+  hi: { en: "Hi", jp: "こんにちは" },
+  yourPoints: { en: "Your points", jp: "ポイント" },
+  howPoints: { en: "How points work", jp: "ポイントの仕組み" },
+  pointsRule: {
+    en: "Attend an event and earn 1 point for every ¥100 of the entry fee.",
+    jp: "イベントに参加すると、参加費¥100ごとに1ポイント獲得。",
+  },
+  inviteFriend: { en: "Invite a friend", jp: "友達を招待" },
+  inviteRule1: { en: "when a brand-new friend joins", jp: "新規の友達が参加" },
+  inviteRule2: { en: "for their 2nd or 3rd time", jp: "2〜3回目の参加" },
+  yourCode: { en: "Your invite code", jp: "あなたの招待コード" },
+  copyCode: { en: "Copy", jp: "コピー" },
+  copied: { en: "Copied!", jp: "コピーしました！" },
+  ptsPerHead: { en: "pts / attendee", jp: "pt / 人" },
+  autoPoints: { en: "Points / attendee", jp: "付与ポイント / 人" },
+  perYenHint: { en: "auto · ¥100 = 1 pt", jp: "自動 · ¥100 = 1pt" },
+  earnAtDoor: { en: "You're in! Earn points at the door", jp: "参加予定！当日ポイント獲得" },
+  tier: { en: "Tier", jp: "ランク" },
+  streak: { en: "week streak", jp: "週連続" },
+  toNext: { en: "to next tier", jp: "で次のランク" },
+  nextUp: { en: "Your next events", jp: "次回の参加予定" },
+  rewardsT: { en: "Rewards", jp: "特典" },
+  redeem: { en: "Redeem", jp: "交換" },
+  history: { en: "Attendance history", jp: "参加履歴" },
+  attended: { en: "Attended", jp: "参加" },
+  missed: { en: "Missed", jp: "欠席" },
+  showRate: { en: "Your show-up rate", jp: "参加率" },
+  eventsAtt: { en: "events attended", jp: "回参加" },
+  profile: { en: "Profile", jp: "プロフィール" },
+  home: { en: "Home", jp: "ホーム" },
+  events: { en: "Events", jp: "イベント" },
+  you: { en: "You", jp: "マイページ" },
+  lockedPts: { en: "more points", jp: "ポイントで解除" },
+
+  // admin
+  overview: { en: "Overview", jp: "概要" },
+  eventsAdm: { en: "Events", jp: "イベント" },
+  membersAdm: { en: "Members", jp: "メンバー" },
+  finance: { en: "Finance", jp: "収支" },
+  revenue: { en: "Revenue", jp: "売上" },
+  costs: { en: "Costs", jp: "支出" },
+  netProfit: { en: "Net profit", jp: "純利益" },
+  showupRate: { en: "Show-up rate", jp: "参加率" },
+  invited: { en: "Invited", jp: "招待" },
+  came: { en: "Came", jp: "参加" },
+  activeMembers: { en: "Active members", jp: "アクティブ会員" },
+  ptsIssued: { en: "Points issued", jp: "発行ポイント" },
+  ptsRedeemed: { en: "Points redeemed", jp: "交換ポイント" },
+  memberGrowth: { en: "Member growth", jp: "会員数の推移" },
+  revVsCost: { en: "Revenue vs. costs", jp: "売上と支出" },
+  perEvent: { en: "Per-event performance", jp: "イベント別の実績" },
+  event: { en: "Event", jp: "イベント" },
+  net: { en: "Net", jp: "純益" },
+  rate: { en: "Rate", jp: "率" },
+  thisMonth: { en: "this month", jp: "今月" },
+  vsLast: { en: "vs last month", jp: "前月比" },
+  allMembers: { en: "members", jp: "名の会員" },
+  lifetimeSpend: { en: "Lifetime spend", jp: "累計支出" },
+  lastSeen: { en: "Last event", jp: "最終参加" },
+  status: { en: "Status", jp: "状態" },
+  active: { en: "Active", jp: "アクティブ" },
+  lapsing: { en: "Lapsing", jp: "離脱傾向" },
+  retention: { en: "Repeat rate", jp: "リピート率" },
+  newEvent: { en: "New event", jp: "イベント作成" },
+  export: { en: "Export", jp: "エクスポート" },
+  avgPerHead: { en: "Avg / attendee", jp: "1人あたり平均" },
+  search: { en: "Search members…", jp: "会員を検索…" },
+
+  // weekend strip
+  thisWeekend: { en: "This weekend", jp: "今週末" },
+  comingUp: { en: "Coming up", jp: "近日開催" },
+  soonSub: { en: "Grab a spot before they fill up", jp: "満席になる前に予約を" },
+  today: { en: "Today", jp: "今日" },
+  tomorrow: { en: "Tomorrow", jp: "明日" },
+  going: { en: "going", jp: "参加" },
+};
+
+const NOW = new Date("2026-06-10T00:00:00");
+
+export function t(key: string, lang: Lang): string {
+  return S[key] ? S[key][lang] || S[key].en : key;
+}
+
+export function val(obj: Bilingual | null | undefined, lang: Lang): string {
+  return obj ? obj[lang] || obj.en : "";
+}
+
+export function daysUntil(iso: string): number {
+  const d = new Date(iso + "T00:00:00");
+  return Math.round((d.getTime() - NOW.getTime()) / 86400000);
+}
+
+export function relDay(iso: string, lang: Lang): string {
+  const n = Math.round((new Date(iso + "T00:00:00").getTime() - NOW.getTime()) / 86400000);
+  if (n <= 0) return S.today[lang] || S.today.en;
+  if (n === 1) return S.tomorrow[lang] || S.tomorrow.en;
+  return lang === "jp" ? `${n}日後` : `in ${n} days`;
+}
+
+export function fmtDate(iso: string, lang: Lang): string {
+  const d = new Date(iso + "T00:00:00");
+  if (lang === "jp") {
+    return `${d.getMonth() + 1}月${d.getDate()}日（${"日月火水木金土"[d.getDay()]}）`;
+  }
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}

@@ -32,7 +32,10 @@ npm run start    # run the production build
 - [x] **Phase 1 — Scaffold & design system.** Next.js + TypeScript project, design tokens
   and fonts ported from the prototype, and a static public hero + this-weekend strip +
   events feed reading the seed data. Bilingual EN/JP toggle.
-- [ ] Phase 2 — Supabase + database (live events feed).
+- [x] **Phase 2 — Supabase + database.** Schema for all five tables with Row-Level Security
+  (`supabase/migrations/0001_init.sql`), a generated seed (`supabase/seed.sql`), and the
+  public feed reads live from the `events` table (published/completed only). Falls back to
+  seed data until Supabase is connected. **Setup steps: see [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md).**
 - [ ] Phase 3 — Auth & member area.
 - [ ] Phase 4 — Admin: events studio.
 - [ ] Phase 5 — Check-in & points.
@@ -44,10 +47,17 @@ npm run start    # run the production build
 app/                 Next.js App Router (layout, page, global CSS)
 components/           UI components ported from the prototype
 lib/
-  data.ts            Seed events, categories, tiers, rewards (Phase 1: hard-coded)
+  data.ts            Seed events, categories, tiers, rewards
   formulas.ts        The money/points math — ported EXACTLY from the spec
   i18n.ts            EN/JP string dictionary + date helpers
   types.ts           Shared domain types
+  supabase.ts        Supabase client factory (reads env vars)
+  events.ts          Event queries (live from Supabase, falls back to seed data)
+supabase/
+  migrations/        Database schema + Row-Level Security
+  seed.sql           Sample data (generated from lib/data.ts)
+scripts/gen-seed.ts  Regenerates supabase/seed.sql from lib/data.ts
+SUPABASE_SETUP.md    Step-by-step: create the project, run SQL, set env vars
 PROJECT_SPEC.md      Build spec / source of truth (from the design handoff)
 *.jsx, *.js,         Original clickable React/HTML prototype (reference only; open
 index.html           index.html in a browser to view it)

@@ -9,27 +9,26 @@ import { Cover } from "./Cover";
 import { Icon } from "./Icon";
 import { EventCard } from "./EventCard";
 import { WeekendStrip } from "./WeekendStrip";
-import { events as seedEvents } from "@/lib/data";
 import { isPast } from "@/lib/formulas";
 import { t } from "@/lib/i18n";
-import type { Lang } from "@/lib/types";
+import type { Event, Lang } from "@/lib/types";
 
 const playful = true; // the public site uses the youthful "playful" vibe
 
-export function PublicSite() {
+export function PublicSite({ initialEvents }: { initialEvents: Event[] }) {
   const [lang, setLang] = useState<Lang>("en");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const feedRef = useRef<HTMLDivElement>(null);
 
   const { upcoming, past } = useMemo(() => {
-    const up = seedEvents
+    const up = initialEvents
       .filter((e) => !isPast(e) && e.status !== "draft")
       .sort((a, b) => (a.date < b.date ? -1 : 1));
-    const pa = seedEvents
+    const pa = initialEvents
       .filter((e) => isPast(e))
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     return { upcoming: up, past: pa };
-  }, []);
+  }, [initialEvents]);
 
   const list = filter === "past" ? past : upcoming;
 

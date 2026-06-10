@@ -1,9 +1,14 @@
 import { PublicSite } from "@/components/PublicSite";
+import { getPublicEvents } from "@/lib/events";
 
-export default function Home() {
+// Always read fresh from the database (no static caching of the feed).
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const events = await getPublicEvents();
   return (
     <main className="stage">
-      <PublicSite />
+      <PublicSite initialEvents={events} />
     </main>
   );
 }

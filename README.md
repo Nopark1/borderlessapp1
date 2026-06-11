@@ -36,7 +36,10 @@ npm run start    # run the production build
   (`supabase/migrations/0001_init.sql`), a generated seed (`supabase/seed.sql`), and the
   public feed reads live from the `events` table (published/completed only). Falls back to
   seed data until Supabase is connected. **Setup steps: see [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md).**
-- [ ] Phase 3 — Auth & member area.
+- [x] **Phase 3 — Auth & member area.** Supabase Auth (passwordless magic link + Google),
+  session handling via middleware, a bilingual `/login` flow, and the `/me` member dashboard
+  (points summed from `points_ledger`, tier, streak, show-rate, upcoming RSVPs, history,
+  rewards). Gated routes redirect to login. See the **Auth** section in `SUPABASE_SETUP.md`.
 - [ ] Phase 4 — Admin: events studio.
 - [ ] Phase 5 — Check-in & points.
 - [ ] Phase 6 — Polish & ship (PWA, Vercel, domain).

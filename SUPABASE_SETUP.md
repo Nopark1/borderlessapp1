@@ -66,6 +66,29 @@ only admins can create or edit them.
 
 ---
 
+---
+
+## 5. Auth settings (for sign-in / Join free — Phase 3)
+
+Sign-in uses a **magic link** (we email you a secure link — no passwords). A couple of
+quick Supabase settings make it work smoothly:
+
+1. **Allowed redirect URLs.** In Supabase → **Authentication → URL Configuration**:
+   - Set **Site URL** to `http://localhost:3000` for now (we'll change it to your real
+     domain at deploy time).
+   - Under **Redirect URLs**, add `http://localhost:3000/auth/callback` (and later your
+     production `https://your-domain/auth/callback`).
+2. **Email.** Supabase's built-in email works out of the box for testing (with low rate
+   limits and a generic sender). For real launch you'll connect your own email sender
+   (SMTP) — we'll do that around deploy time.
+3. **Google sign-in (optional).** The "Continue with Google" button only works after you
+   enable Google in **Authentication → Providers**. It's fine to skip for now — magic link
+   works on its own.
+
+**Make yourself an admin:** sign in once (so your `members` row is created), then in
+**Table Editor → members**, find your row and flip **`is_admin`** to `true`. That unlocks
+the admin dashboard in Phase 4.
+
 ## Notes
 
 - **`.env.local` holds secrets — it is never committed to GitHub** (it's already git-ignored).

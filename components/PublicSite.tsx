@@ -5,6 +5,7 @@
    Reads hard-coded seed data; Supabase reads arrive in Phase 2. */
 
 import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { Cover } from "./Cover";
 import { Icon } from "./Icon";
 import { EventCard } from "./EventCard";
@@ -15,7 +16,13 @@ import type { Event, Lang } from "@/lib/types";
 
 const playful = true; // the public site uses the youthful "playful" vibe
 
-export function PublicSite({ initialEvents }: { initialEvents: Event[] }) {
+export function PublicSite({
+  initialEvents,
+  signedIn = false,
+}: {
+  initialEvents: Event[];
+  signedIn?: boolean;
+}) {
   const [lang, setLang] = useState<Lang>("en");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const feedRef = useRef<HTMLDivElement>(null);
@@ -94,9 +101,9 @@ export function PublicSite({ initialEvents }: { initialEvents: Event[] }) {
                 : "Kyoto's fastest-growing international circle. Experience new cultures and meet new friends✨️"}
             </p>
             <div style={{ display: "flex", gap: 10, pointerEvents: "auto" }}>
-              <button className="btn btn-primary" onClick={scrollToFeed}>
+              <Link className="btn btn-primary" href={signedIn ? "/me" : "/login?mode=signup"}>
                 {t("joinFree", lang)}
-              </button>
+              </Link>
               <button
                 className="btn btn-ghost"
                 style={{ color: "#fff", borderColor: "rgba(255,255,255,.4)" }}
@@ -107,25 +114,51 @@ export function PublicSite({ initialEvents }: { initialEvents: Event[] }) {
             </div>
           </div>
           <div style={{ position: "absolute", top: 14, right: 16, zIndex: 6 }}>
-            <button
-              style={{
-                all: "unset",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 14px",
-                borderRadius: 999,
-                background: "rgba(255,255,255,.92)",
-                color: "var(--ink)",
-                fontWeight: 700,
-                fontSize: 12.5,
-                whiteSpace: "nowrap",
-                boxShadow: "0 2px 10px rgba(0,0,0,.28)",
-              }}
-            >
-              <Icon name="user" size={14} color="var(--primary)" /> {t("signIn", lang)}
-            </button>
+            {signedIn ? (
+              <Link
+                href="/me"
+                title="Account"
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  background: "var(--primary)",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  boxShadow: "0 2px 10px rgba(0,0,0,.35)",
+                }}
+              >
+                <Icon name="user" size={18} color="#fff" />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 14px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,.92)",
+                  color: "var(--ink)",
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 10px rgba(0,0,0,.28)",
+                }}
+              >
+                <Icon name="user" size={14} color="var(--primary)" /> {t("signIn", lang)}
+              </Link>
+            )}
           </div>
         </div>
 

@@ -50,7 +50,10 @@ npm run start    # run the production build
   live attendance ring + actual revenue/net/points. **Finish & record** completes the event,
   writes attendance, and credits participation points + invite bonuses to the ledger
   (idempotent). Member dashboards update from these writes.
-- [ ] Phase 6 — Polish & ship (PWA, Vercel, domain).
+- [x] **Phase 6 — Polish & ship.** Admin Overview (metric cards + revenue/cost & member-growth
+  charts + per-event table) and the searchable Members table (tier, attended, points, lifetime
+  spend, retention, active/lapsing), all computed live from the database. PWA manifest + icons
+  (add-to-home-screen). **Deploy guide: [`DEPLOY.md`](./DEPLOY.md).**
 
 ## Project layout
 

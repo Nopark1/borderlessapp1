@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Borderless — Kyoto Cultural Gathering",
   description:
     "An international circle in Kyoto hosting a new gathering every week — temples, ramen, rooftops and riverbanks. Come as you are.",
+  applicationName: "Borderless",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Borderless" },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {

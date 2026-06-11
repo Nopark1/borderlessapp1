@@ -5,15 +5,28 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "../Icon";
 import { AdminEvents } from "./AdminEvents";
+import { AdminOverview } from "./AdminOverview";
+import { AdminMembers } from "./AdminMembers";
 import { EventStudio } from "./EventStudio";
 import { duplicateEvent, deleteEvent } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
 import type { Event, Lang } from "@/lib/types";
+import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
 type Tab = "overview" | "events" | "members";
 type Editor = Event | "new" | null;
 
-export function AdminApp({ initialEvents, email }: { initialEvents: Event[]; email: string }) {
+export function AdminApp({
+  initialEvents,
+  overview,
+  members,
+  email,
+}: {
+  initialEvents: Event[];
+  overview: OverviewData;
+  members: MemberRow[];
+  email: string;
+}) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [tab, setTab] = useState<Tab>("events");
@@ -107,29 +120,16 @@ export function AdminApp({ initialEvents, email }: { initialEvents: Event[]; ema
           <EventStudio lang={lang} initial={editor === "new" ? null : editor} onClose={() => setEditor(null)} onSaved={onSaved} />
         ) : tab === "events" ? (
           <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onCheckin={onCheckin} onDuplicate={onDuplicate} onDelete={onDelete} />
+        ) : tab === "overview" ? (
+          <AdminOverview lang={lang} data={overview} />
         ) : (
-          <Placeholder lang={lang} tab={tab} />
+          <AdminMembers lang={lang} members={members} />
         )}
         {pending && (
           <div style={{ position: "fixed", bottom: 18, right: 18, background: "var(--ink)", color: "#f6efe2", padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, boxShadow: "var(--shadow-lg)" }}>
             {lang === "jp" ? "更新中…" : "Working…"}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function Placeholder({ lang, tab }: { lang: Lang; tab: Tab }) {
-  const title = tab === "overview" ? t("overview", lang) : t("membersAdm", lang);
-  return (
-    <div style={{ padding: "26px 30px 40px" }}>
-      <h1 style={{ fontSize: 28 }}>{title}</h1>
-      <div className="metric" style={{ marginTop: 22, padding: "40px 22px", textAlign: "center", color: "var(--ink-faint)" }}>
-        <Icon name="chart" size={28} color="var(--ink-faint)" />
-        <div style={{ marginTop: 12, fontWeight: 600, fontSize: 14 }}>
-          {lang === "jp" ? "このセクションはフェーズ6で追加されます（チャートと会員テーブル）。" : "Charts and the members table arrive in Phase 6."}
-        </div>
       </div>
     </div>
   );

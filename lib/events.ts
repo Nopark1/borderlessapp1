@@ -71,15 +71,21 @@ export async function getPublicEvents(): Promise<Event[]> {
   const sb = getSupabase();
   if (!sb) return seedEvents; // not connected yet — use seed data
 
-  const { data, error } = await sb
-    .from("events")
-    .select("*")
-    .in("status", ["published", "completed"])
-    .order("date", { ascending: true });
+  try {
+    const { data, error } = await sb
+      .from("events")
+      .select("*")
+      .in("status", ["published", "completed"])
+      .order("date", { ascending: true });
 
-  if (error) {
-    console.error("[getPublicEvents] Supabase read failed, using seed data:", error.message);
+    if (error) {
+      console.error("[getPublicEvents] Supabase read failed, using seed data:", error.message);
+      return seedEvents;
+    }
+    return (data as EventRow[]).map(fromRow);
+  } catch (e) {
+    // Network unreachable (e.g. host blocked / offline) — degrade gracefully.
+    console.error("[getPublicEvents] Supabase unreachable, using seed data:", (e as Error).message);
     return seedEvents;
   }
-  return (data as EventRow[]).map(fromRow);
 }

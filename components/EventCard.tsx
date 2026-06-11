@@ -21,7 +21,7 @@ export function EventCard({
   const past = isPast(event);
   const spots = event.capacity - (event.rsvp || 0);
   return (
-    <Link href={`/events/${event.slug}`} className="fade-up tap-card" style={{ width: "100%" }}>
+    <Link href={`/events/${event.slug}`} className="tap-card" style={{ width: "100%", display: "block" }}>
       <div className="card" style={{ overflow: "hidden", marginBottom: 0 }}>
         <Cover seed={event.cover} h={past ? 132 : 158} label dim={past ? 0.12 : 0}>
           <div style={{ position: "absolute", top: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>

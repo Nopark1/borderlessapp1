@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Icon } from "./Icon";
 import { Ring } from "./Ring";
 import { Cover } from "./Cover";
+import { EmptyState } from "./EmptyState";
 import { inviteBonus } from "@/lib/formulas";
 import { t, val, fmtDate } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
@@ -178,11 +179,18 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
           <SectionTitle>{t("nextUp", lang)}</SectionTitle>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
             {data.upcoming.length === 0 && (
-              <div className="card" style={{ padding: "18px 16px", textAlign: "center", color: "var(--ink-faint)", fontSize: 13 }}>
-                {lang === "jp" ? "参加予定はまだありません。" : "No upcoming events yet."}{" "}
-                <Link href="/" style={{ color: "var(--primary)", fontWeight: 700 }}>
-                  {t("browse", lang)}
-                </Link>
+              <div className="card">
+                <EmptyState
+                  compact
+                  icon="calendar"
+                  title={lang === "jp" ? "参加予定はまだありません" : "No upcoming events yet"}
+                  sub={lang === "jp" ? "気になるイベントに参加表明しましょう。" : "RSVP to an event and it'll show up here."}
+                  action={
+                    <Link href="/" className="btn btn-primary btn-sm">
+                      {t("browse", lang)}
+                    </Link>
+                  }
+                />
               </div>
             )}
             {data.upcoming.map((e) => (
@@ -255,9 +263,12 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
           </div>
           <div className="card" style={{ padding: "6px 16px" }}>
             {data.history.length === 0 && (
-              <div style={{ padding: "14px 0", textAlign: "center", color: "var(--ink-faint)", fontSize: 13 }}>
-                {lang === "jp" ? "まだ参加履歴がありません。" : "No attendance history yet."}
-              </div>
+              <EmptyState
+                compact
+                icon="clock"
+                title={lang === "jp" ? "参加履歴はまだありません" : "No attendance history yet"}
+                sub={lang === "jp" ? "イベントに参加するとここに記録されます。" : "Events you attend will appear here."}
+              />
             )}
             {data.history.map((h, i) => (
               <div

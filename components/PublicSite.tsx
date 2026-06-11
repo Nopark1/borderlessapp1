@@ -10,6 +10,8 @@ import { Cover } from "./Cover";
 import { Icon } from "./Icon";
 import { EventCard } from "./EventCard";
 import { WeekendStrip } from "./WeekendStrip";
+import { Reveal } from "./Reveal";
+import { EmptyState } from "./EmptyState";
 import { isPast } from "@/lib/formulas";
 import { t } from "@/lib/i18n";
 import type { Event, Lang } from "@/lib/types";
@@ -176,12 +178,33 @@ export function PublicSite({
         </div>
 
         <div className="feed-grid">
-          {list.map((e) => (
-            <EventCard key={e.id} event={e} lang={lang} playful={playful} />
+          {list.length === 0 && (
+            <div className="feed-foot">
+              <EmptyState
+                icon={filter === "past" ? "trophy" : "calendar"}
+                title={
+                  filter === "past"
+                    ? lang === "jp" ? "過去のイベントはまだありません" : "No past events yet"
+                    : lang === "jp" ? "予定されているイベントはありません" : "No upcoming events right now"
+                }
+                sub={
+                  filter === "past"
+                    ? lang === "jp" ? "開催後にここに表示されます。" : "They'll show up here after they happen."
+                    : lang === "jp" ? "新しい企画を準備中です。またチェックしてください！" : "We're planning the next gathering — check back soon!"
+                }
+              />
+            </div>
+          )}
+          {list.map((e, i) => (
+            <Reveal key={e.id} delay={(i % 3) * 70}>
+              <EventCard event={e} lang={lang} playful={playful} />
+            </Reveal>
           ))}
-          <div className="feed-foot" style={{ textAlign: "center", color: "var(--ink-faint)", fontSize: 12, padding: "16px 0 4px", fontFamily: "var(--font-display)" }}>
-            ボーダレス · Borderless Kyoto
-          </div>
+          {list.length > 0 && (
+            <div className="feed-foot" style={{ textAlign: "center", color: "var(--ink-faint)", fontSize: 12, padding: "16px 0 4px", fontFamily: "var(--font-display)" }}>
+              ボーダレス · Borderless Kyoto
+            </div>
+          )}
         </div>
       </div>
     </div>

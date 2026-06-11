@@ -73,16 +73,8 @@ export function Cover({
   const isImage = typeof seed === "string" && (seed.startsWith("http") || seed.startsWith("/uploads") || seed.startsWith("/"));
   if (isImage) {
     return (
-      <div
-        className="cover"
-        style={{
-          height: fill ? "100%" : h,
-          borderRadius: radius,
-          backgroundImage: `url(${seed})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
+      <div className="cover" style={{ height: fill ? "100%" : h, borderRadius: radius }}>
+        <div className="cover-bg" style={{ backgroundImage: `url(${seed})` }} />
         {dim > 0 && <div style={{ position: "absolute", inset: 0, background: `rgba(20,12,10,${dim})` }} />}
         {label && <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0 }} className="scrim" />}
         {children}
@@ -104,16 +96,14 @@ export function Cover({
   };
   const motif = motifs[seed] || <SunMotif a={c3} />;
   return (
-    <div
-      className="cover"
-      style={{
-        height: fill ? "100%" : h,
-        borderRadius: radius,
-        background: `radial-gradient(120% 130% at 78% 18%, ${c3} 0%, ${c2} 42%, ${c1} 100%)`,
-      }}
-    >
-      <div className="cover-motif">{motif}</div>
-      <div className="cover-grain" />
+    <div className="cover" style={{ height: fill ? "100%" : h, borderRadius: radius }}>
+      <div
+        className="cover-bg"
+        style={{ background: `radial-gradient(120% 130% at 78% 18%, ${c3} 0%, ${c2} 42%, ${c1} 100%)` }}
+      >
+        <div className="cover-motif">{motif}</div>
+        <div className="cover-grain" />
+      </div>
       {dim > 0 && <div style={{ position: "absolute", inset: 0, background: `rgba(20,12,10,${dim})` }} />}
       {label && <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0 }} className="scrim" />}
       {children}

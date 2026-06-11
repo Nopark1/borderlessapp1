@@ -61,7 +61,13 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
             <div style={{ color: "rgba(255,255,255,.85)", fontSize: 13, fontWeight: 600 }}>
               {t("hi", lang)}, <b style={{ color: "#fff", fontFamily: "var(--font-display)" }}>{firstName}</b> 🎐
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <Link
+                href="/"
+                style={{ all: "unset", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 999, background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 12, fontWeight: 700 }}
+              >
+                <Icon name="home" size={14} color="#fff" /> {t("home", lang)}
+              </Link>
               {data.isAdmin && (
                 <Link
                   href="/admin"

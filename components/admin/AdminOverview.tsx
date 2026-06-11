@@ -32,16 +32,16 @@ function Legend({ items }: { items: [string, string][] }) {
 
 export function AdminOverview({ lang, data }: { lang: Lang; data: OverviewData }) {
   return (
-    <div style={{ padding: "26px 30px 40px" }}>
+    <div className="adm-pad" style={{ padding: "26px 30px 40px" }}>
       <PageHead title={t("overview", lang)} sub={lang === "jp" ? "全体の状況" : "Circle health"} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 16 }}>
+      <div className="metric-grid" style={{ marginBottom: 16 }}>
         <Metric label={t("revenue", lang)} value={yen(data.revenue)} sub={lang === "jp" ? "終了イベント合計" : "completed events"} />
         <Metric label={t("costs", lang)} value={yen(data.costs)} sub={lang === "jp" ? "終了イベント合計" : "completed events"} />
         <Metric label={t("netProfit", lang)} value={yen(data.net)} accent={data.net >= 0 ? "var(--success)" : "var(--danger)"} sub={t("revenue", lang).toLowerCase() + " − " + t("costs", lang).toLowerCase()} />
         <Metric label={t("showupRate", lang)} value={data.showRate + "%"} accent="var(--primary)" sub={`${data.invitedTotal} → ${data.attendedTotal}`} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+      <div className="metric-grid" style={{ marginBottom: 24 }}>
         <Metric label={t("activeMembers", lang)} value={data.activeMembers} sub={lang === "jp" ? "登録会員" : "total members"} />
         <Metric label={t("invited", lang) + " → " + t("came", lang)} value={`${data.invitedTotal} → ${data.attendedTotal}`} sub={lang === "jp" ? "全終了イベント" : "all past events"} />
         <Metric label={t("ptsIssued", lang)} value={data.pointsIssued} sub={`${data.pointsRedeemed} ${t("ptsRedeemed", lang).toLowerCase()}`} />
@@ -49,7 +49,7 @@ export function AdminOverview({ lang, data }: { lang: Lang; data: OverviewData }
       </div>
 
       {/* charts */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div className="charts-row">
         <div className="metric" style={{ padding: "20px 22px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>{t("revVsCost", lang)}</div>
@@ -68,6 +68,7 @@ export function AdminOverview({ lang, data }: { lang: Lang; data: OverviewData }
       {/* per-event table */}
       <div className="metric" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "18px 22px 12px", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>{t("perEvent", lang)}</div>
+        <div className="tbl-wrap">
         <table className="tbl">
           <thead>
             <tr>
@@ -112,6 +113,7 @@ export function AdminOverview({ lang, data }: { lang: Lang; data: OverviewData }
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -68,7 +68,7 @@ export function CheckInScreen({ event, roster }: { event: Event; roster: RosterM
   return (
     <div style={{ minHeight: "100vh", background: "#f7f1e8", display: "flex", flexDirection: "column" }}>
       {/* header */}
-      <div style={{ padding: "18px 30px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "#fff" }}>
+      <div className="adm-pad" style={{ padding: "18px 30px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, rowGap: 12, flexWrap: "wrap", background: "#fff" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 13, minWidth: 0 }}>
           <Link href="/admin" style={{ width: 38, height: 38, borderRadius: 11, background: "#fff", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 38px" }}>
             <Icon name="arrowL" size={19} color="var(--ink)" />
@@ -98,7 +98,7 @@ export function CheckInScreen({ event, roster }: { event: Event; roster: RosterM
         <div style={{ background: "#f8e8e3", color: "var(--danger)", fontWeight: 600, fontSize: 13, padding: "10px 30px" }}>{error}</div>
       )}
 
-      <div style={{ flex: 1, padding: "22px 30px 40px", display: "grid", gridTemplateColumns: "300px 1fr", gap: 22, alignItems: "start" }}>
+      <div className="checkin-body">
         {/* stats */}
         <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
           <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 16, padding: "22px 20px", display: "flex", flexDirection: "column", alignItems: "center" }}>

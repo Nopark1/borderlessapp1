@@ -121,9 +121,9 @@ export function EventStudio({
     : lang === "jp" ? "公開すると、公開サイトに表示されます" : "Once published, this appears on the public site";
 
   return (
-    <div style={{ height: "100%", display: "flex", minHeight: 0 }}>
+    <div className="studio">
       {/* form column */}
-      <div style={{ flex: 1, minWidth: 0, overflowY: "auto", padding: "24px 30px 40px" }}>
+      <div className="studio-form">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, gap: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
             <button onClick={onClose} style={{ all: "unset", cursor: "pointer", width: 38, height: 38, borderRadius: 11, background: "#fff", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -183,7 +183,7 @@ export function EventStudio({
               ))}
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+          <div className="fg2" style={{ marginBottom: 14 }}>
             <label><span style={lbl}>{t("titleEnL", lang)}</span><input style={fld} value={f.titleEn} onChange={(e) => set("titleEn", e.target.value)} onFocus={onF} onBlur={onB} placeholder="Midsummer Yukata Night" /></label>
             <label><span style={lbl}>{t("titleJpL", lang)}</span><input style={fld} value={f.titleJp} onChange={(e) => set("titleJp", e.target.value)} onFocus={onF} onBlur={onB} placeholder="真夏の浴衣ナイト" /></label>
           </div>
@@ -206,16 +206,16 @@ export function EventStudio({
         {/* when & where */}
         <div style={sec}>
           <div style={secTitle}><Icon name="pin" size={16} color="var(--primary)" /> {t("dateTime", lang)} · {t("location", lang)}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+          <div className="fg3" style={{ marginBottom: 14 }}>
             <label><span style={lbl}>{t("dateTime", lang)}</span><input type="date" style={fld} value={f.date} onChange={(e) => set("date", e.target.value)} onFocus={onF} onBlur={onB} /></label>
             <label><span style={lbl}>{t("startT", lang)}</span><input type="time" style={fld} value={f.start} onChange={(e) => set("start", e.target.value)} onFocus={onF} onBlur={onB} /></label>
             <label><span style={lbl}>{t("endT", lang)}</span><input type="time" style={fld} value={f.end} onChange={(e) => set("end", e.target.value)} onFocus={onF} onBlur={onB} /></label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+          <div className="fg2" style={{ marginBottom: 14 }}>
             <label><span style={lbl}>{t("venueEnL", lang)} (EN)</span><input style={fld} value={f.venueEn} onChange={(e) => set("venueEn", e.target.value)} onFocus={onF} onBlur={onB} placeholder="Kamogawa Riverbank" /></label>
             <label><span style={lbl}>{t("venueEnL", lang)} (JP)</span><input style={fld} value={f.venueJp} onChange={(e) => set("venueJp", e.target.value)} onFocus={onF} onBlur={onB} placeholder="鴨川河川敷" /></label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="fg2">
             <label><span style={lbl}>{t("areaL", lang)} (EN)</span><input style={fld} value={f.areaEn} onChange={(e) => set("areaEn", e.target.value)} onFocus={onF} onBlur={onB} placeholder="Pontocho" /></label>
             <label><span style={lbl}>{t("areaL", lang)} (JP)</span><input style={fld} value={f.areaJp} onChange={(e) => set("areaJp", e.target.value)} onFocus={onF} onBlur={onB} placeholder="先斗町" /></label>
           </div>
@@ -261,7 +261,7 @@ export function EventStudio({
         {/* pricing */}
         <div style={sec}>
           <div style={secTitle}><Icon name="ticket" size={16} color="var(--primary)" /> {t("pricingCap", lang)}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+          <div className="fg4">
             <label><span style={lbl}>{t("priceL", lang)}</span><input type="number" style={fld} value={f.price} onChange={(e) => set("price", Number(e.target.value))} onFocus={onF} onBlur={onB} /></label>
             <label><span style={lbl}>{t("capacityL", lang)}</span><input type="number" style={fld} value={f.capacity} onChange={(e) => set("capacity", Number(e.target.value))} onFocus={onF} onBlur={onB} /></label>
             <label>
@@ -280,7 +280,7 @@ export function EventStudio({
         {/* costs & break-even */}
         <div style={sec}>
           <div style={secTitle}><Icon name="scale" size={16} color="var(--primary)" /> {t("costsBreak", lang)}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.25fr", gap: 14, alignItems: "end" }}>
+          <div className="fgc">
             <label><span style={lbl}>{t("totalCost", lang)}</span><input type="number" style={fld} value={f.cost} onChange={(e) => set("cost", Number(e.target.value))} onFocus={onF} onBlur={onB} /></label>
             <div style={{ background: beOver ? "#f8e8e3" : "var(--success-soft)", borderRadius: 11, padding: "10px 15px", display: "flex", alignItems: "center", gap: 13 }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 28, color: beOver ? "var(--danger)" : "var(--success)", lineHeight: 1 }}>{be}</div>
@@ -296,7 +296,7 @@ export function EventStudio({
         {/* description */}
         <div style={sec}>
           <div style={secTitle}><Icon name="chart" size={16} color="var(--primary)" /> {t("descL", lang)}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="fg2">
             <label><span style={lbl}>{t("descEnL", lang)}</span><textarea style={{ ...fld, minHeight: 96, resize: "vertical" }} value={f.descEn} onChange={(e) => set("descEn", e.target.value)} onFocus={onF} onBlur={onB} placeholder="Tell people what to expect…" /></label>
             <label><span style={lbl}>{t("descJpL", lang)}</span><textarea style={{ ...fld, minHeight: 96, resize: "vertical" }} value={f.descJp} onChange={(e) => set("descJp", e.target.value)} onFocus={onF} onBlur={onB} placeholder="イベントの内容を記入…" /></label>
           </div>
@@ -304,7 +304,7 @@ export function EventStudio({
       </div>
 
       {/* preview column */}
-      <div style={{ width: 372, flex: "0 0 372px", borderLeft: "1px solid var(--line)", background: "#f1e7d8", overflowY: "auto", padding: "24px 22px 40px" }}>
+      <div className="studio-preview">
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14, color: "var(--ink-soft)" }}>
           <Icon name="globe" size={15} color="var(--ink-soft)" />
           <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}>{t("livePreview", lang)}</span>

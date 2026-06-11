@@ -106,7 +106,9 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
           </div>
         </div>
 
-        <div style={{ padding: "0 18px 30px", marginTop: -48, position: "relative", zIndex: 2 }}>
+        <div className="dash-content">
+         <div className="dash-grid">
+          <div>
           {/* quick stats */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
             <div className="card" style={{ padding: "16px" }}>
@@ -203,7 +205,9 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
               </Link>
             ))}
           </div>
+          </div>{/* end column A */}
 
+          <div>
           {/* rewards */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 17 }}>{t("rewardsT", lang)}</div>
@@ -270,6 +274,8 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
               </div>
             ))}
           </div>
+          </div>{/* end column B */}
+         </div>{/* end dash-grid */}
         </div>
       </div>
     </div>

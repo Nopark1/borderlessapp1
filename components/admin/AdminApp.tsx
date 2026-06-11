@@ -63,7 +63,7 @@ export function AdminApp({
     <div className="admin-shell">
       {/* sidebar */}
       <div className="adm-side">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 10px 18px" }}>
+        <div className="adm-brand" style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 10px 18px" }}>
           <span className="bl-emblem" style={{ width: 34, height: 34, flex: "0 0 34px" }} aria-hidden="true">
             <Icon name="globe" size={18} color="#fff" />
           </span>
@@ -83,18 +83,19 @@ export function AdminApp({
         ))}
         <button
           onClick={openNew}
+          className="adm-newbtn"
           style={{ all: "unset", cursor: "pointer", marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", borderRadius: 11, background: busy ? "var(--primary)" : "rgba(255,255,255,.08)", color: "#fff", fontSize: 13, fontWeight: 700 }}
         >
           <Icon name="plus" size={16} color="#fff" /> {t("newEvent", lang)}
         </button>
 
-        <div style={{ marginTop: "auto", paddingTop: 14 }}>
+        <div className="adm-foot">
           <div className="lang-toggle" style={{ marginBottom: 12 }}>
             <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button>
             <button className={lang === "jp" ? "on" : ""} onClick={() => setLang("jp")}>日本</button>
           </div>
-          <div style={{ padding: "14px 12px 0", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: 10 }}>
-            <Link href="/me" title="Member view" style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, fontFamily: "var(--font-display)" }}>
+          <div className="adm-foot-user" style={{ padding: "14px 12px 0", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/me" title="Member view" style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, fontFamily: "var(--font-display)", flex: "0 0 30px" }}>
               {(email[0] || "B").toUpperCase()}
             </Link>
             <div style={{ lineHeight: 1.15, minWidth: 0 }}>

@@ -100,61 +100,74 @@ export function EventDetail({
           </Cover>
         </div>
 
-        <div style={{ padding: past ? "18px 18px 40px" : "18px 18px 130px" }}>
-          {/* meta */}
-          <div className="card" style={{ padding: 16, marginBottom: 18 }}>
-            <Row icon="calendar" main={fmtDate(event.date, lang)} sub={`${event.time}–${event.endTime}`} />
-            <hr className="hr" style={{ margin: "13px 0" }} />
-            <Row icon="pin" main={val(event.venue, lang)} sub={val(event.area, lang)} />
-            <hr className="hr" style={{ margin: "13px 0" }} />
-            <Row
-              icon="ticket"
-              main={event.price ? yen(event.price) + " " + t("perPerson", lang) : t("free", lang)}
-              sub={
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--gold)", whiteSpace: "nowrap" }}>
-                  <Icon name="star" size={12} color="var(--gold)" fill="var(--gold)" /> {t("earnPt", lang)} {pointsFor(event)}{" "}
-                  {pointsFor(event) === 1 ? t("point", lang) : t("points", lang)}
-                </span>
-              }
-            />
+        <div className="detail-grid">
+          {/* side: meta card + (desktop) RSVP */}
+          <div className="detail-side">
+            <div className="card" style={{ padding: 16, marginBottom: 18 }}>
+              <Row icon="calendar" main={fmtDate(event.date, lang)} sub={`${event.time}–${event.endTime}`} />
+              <hr className="hr" style={{ margin: "13px 0" }} />
+              <Row icon="pin" main={val(event.venue, lang)} sub={val(event.area, lang)} />
+              <hr className="hr" style={{ margin: "13px 0" }} />
+              <Row
+                icon="ticket"
+                main={event.price ? yen(event.price) + " " + t("perPerson", lang) : t("free", lang)}
+                sub={
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--gold)", whiteSpace: "nowrap" }}>
+                    <Icon name="star" size={12} color="var(--gold)" fill="var(--gold)" /> {t("earnPt", lang)} {pointsFor(event)}{" "}
+                    {pointsFor(event) === 1 ? t("point", lang) : t("points", lang)}
+                  </span>
+                }
+              />
+            </div>
+
+            {!past && (
+              <div className="card detail-rsvp-desktop" style={{ padding: 16, marginBottom: 18 }}>
+                {error && <div style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}
+                <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600 }}>{spots} {t("spotsLeft", lang)}</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, margin: "2px 0 12px" }}>{event.price ? yen(event.price) : t("free", lang)}</div>
+                <button className={"btn btn-block " + (joined ? "btn-ghost" : "btn-primary")} disabled={pending} onClick={onRsvp}>
+                  {joined ? (<><Icon name="check" size={16} color="var(--ink)" /> {t("youreIn", lang)}</>) : pending ? (lang === "jp" ? "処理中…" : "…") : t("imComing", lang)}
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* about */}
-          <SectionTitle>{t("about", lang)}</SectionTitle>
-          <p style={{ fontSize: 14, lineHeight: 1.72, color: "var(--ink-soft)", margin: "0 0 24px" }}>{val(event.desc, lang)}</p>
+          {/* main: about, who's coming, recap, map */}
+          <div className="detail-main">
+            <SectionTitle>{t("about", lang)}</SectionTitle>
+            <p style={{ fontSize: 14, lineHeight: 1.72, color: "var(--ink-soft)", margin: "0 0 24px" }}>{val(event.desc, lang)}</p>
 
-          {/* who's coming */}
-          <SectionTitle>{past ? t("recap", lang) : t("whoscoming", lang)}</SectionTitle>
-          <div style={{ display: "flex", alignItems: "center", marginBottom: past ? 16 : 24 }}>
-            <div style={{ display: "flex" }}>
-              {Array.from({ length: avatarN }).map((_, i) => (
-                <div
-                  key={i}
-                  style={{ width: 36, height: 36, borderRadius: "50%", marginLeft: i ? -10 : 0, background: avatarColors[i % 7], border: "2px solid var(--surface)", zIndex: 7 - i }}
-                />
-              ))}
+            <SectionTitle>{past ? t("recap", lang) : t("whoscoming", lang)}</SectionTitle>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: past ? 16 : 24 }}>
+              <div style={{ display: "flex" }}>
+                {Array.from({ length: avatarN }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{ width: 36, height: 36, borderRadius: "50%", marginLeft: i ? -10 : 0, background: avatarColors[i % 7], border: "2px solid var(--surface)", zIndex: 7 - i }}
+                  />
+                ))}
+              </div>
+              <span style={{ marginLeft: avatarN ? 12 : 0, fontSize: 13, color: "var(--ink-soft)", fontWeight: 600 }}>
+                {past ? `${event.attended} ${t("came", lang)}` : `${goingCount} ${lang === "jp" ? "人が参加予定" : "going"}`}
+              </span>
             </div>
-            <span style={{ marginLeft: avatarN ? 12 : 0, fontSize: 13, color: "var(--ink-soft)", fontWeight: 600 }}>
-              {past ? `${event.attended} ${t("came", lang)}` : `${goingCount} ${lang === "jp" ? "人が参加予定" : "going"}`}
-            </span>
+
+            {past && (event.gallery || 0) > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 24 }}>
+                {["sakura", "river", "night", "tea", "food", "zen"].map((s, i) => (
+                  <Cover key={i} seed={s} h={92} radius={10} />
+                ))}
+              </div>
+            )}
+
+            <SectionTitle>{t("getThere", lang)}</SectionTitle>
+            <FauxMap lang={lang} />
           </div>
-
-          {past && (event.gallery || 0) > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 24 }}>
-              {["sakura", "river", "night", "tea", "food", "zen"].map((s, i) => (
-                <Cover key={i} seed={s} h={92} radius={10} />
-              ))}
-            </div>
-          )}
-
-          {/* map */}
-          <SectionTitle>{t("getThere", lang)}</SectionTitle>
-          <FauxMap lang={lang} />
         </div>
 
-        {/* sticky RSVP bar (upcoming only) */}
+        {/* sticky RSVP bar — phones only (desktop uses the side card) */}
         {!past && (
-          <div style={{ position: "sticky", bottom: 0, left: 0, right: 0, padding: "14px 18px 18px", background: "linear-gradient(to top, var(--paper) 72%, transparent)" }}>
+          <div className="detail-rsvp-mobile" style={{ position: "sticky", bottom: 0, left: 0, right: 0, padding: "14px 18px 18px", background: "linear-gradient(to top, var(--paper) 72%, transparent)" }}>
             {error && <div style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ flex: "0 0 auto" }}>

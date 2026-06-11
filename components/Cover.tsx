@@ -59,6 +59,7 @@ export function Cover({
   label,
   children,
   dim = 0,
+  fill = false,
 }: {
   seed: string;
   h?: number;
@@ -66,6 +67,7 @@ export function Cover({
   label?: boolean;
   children?: React.ReactNode;
   dim?: number;
+  fill?: boolean;
 }) {
   const pal = (covers as Record<string, [string, string, string]>)[seed] || ["#8A3233", "#C4583B", "#E8A04A"];
   const [c1, c2, c3] = pal;
@@ -84,7 +86,7 @@ export function Cover({
     <div
       className="cover"
       style={{
-        height: h,
+        height: fill ? "100%" : h,
         borderRadius: radius,
         background: `radial-gradient(120% 130% at 78% 18%, ${c3} 0%, ${c2} 42%, ${c1} 100%)`,
       }}

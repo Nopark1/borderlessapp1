@@ -36,7 +36,7 @@ export function AdminEvents({
   const showPast = filter === "all" || filter === "completed";
 
   return (
-    <div style={{ padding: "26px 30px 40px" }}>
+    <div className="adm-pad" style={{ padding: "26px 30px 40px" }}>
       <PageHead
         title={t("eventsAdm", lang)}
         sub={lang === "jp" ? "招待 vs 参加・収支" : "Invited vs. came · money in/out"}
@@ -110,7 +110,7 @@ export function AdminEvents({
           <div style={{ marginBottom: 14, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--ink-soft)" }}>
             {t("past", lang)}
           </div>
-          <div className="metric" style={{ padding: 0, overflow: "visible" }}>
+          <div className="metric tbl-wrap" style={{ padding: 0, overflow: "visible" }}>
             <table className="tbl">
               <thead>
                 <tr>

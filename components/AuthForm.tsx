@@ -100,7 +100,7 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
         </div>
       </header>
 
-      <div className="bl-screen" style={{ background: "var(--paper)" }}>
+      <div className="auth-card">
         <div style={{ padding: "26px 22px 34px" }}>
           {status === "sent" ? (
             <div style={{ textAlign: "center", padding: "20px 6px" }}>

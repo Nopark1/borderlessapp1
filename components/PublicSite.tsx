@@ -68,8 +68,8 @@ export function PublicSite({
       {/* mobile-first content column */}
       <div className="bl-screen">
         {/* hero */}
-        <div style={{ position: "relative" }}>
-          <Cover seed="lantern" h={336} />
+        <div className="pub-hero">
+          <Cover seed="lantern" fill />
           <div
             style={{
               position: "absolute",
@@ -79,7 +79,7 @@ export function PublicSite({
                 "linear-gradient(to top, rgba(20,12,10,.92), rgba(20,12,10,.32) 55%, rgba(20,12,10,.45))",
             }}
           />
-          <div style={{ position: "absolute", left: 22, right: 22, bottom: 24, pointerEvents: "none" }}>
+          <div className="pub-hero-inner">
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "nowrap", paddingRight: 74 }}>
               <span className="sticker wobble tilt-l" style={{ fontSize: 12.5, padding: "7px 13px", whiteSpace: "nowrap" }}>
                 <Icon name="sparkle" size={14} color="var(--primary)" fill="var(--primary)" />{" "}
@@ -92,9 +92,7 @@ export function PublicSite({
                 <Icon name="users" size={14} color="var(--primary)" /> 100+ {lang === "jp" ? "仲間" : "friends"}
               </span>
             </div>
-            <h1 style={{ color: "#fff", fontSize: 40, lineHeight: 1.08, whiteSpace: "pre-line", textShadow: "0 3px 18px rgba(0,0,0,.4)" }}>
-              {t("heroTitle", lang)}
-            </h1>
+            <h1 className="pub-hero-title">{t("heroTitle", lang)}</h1>
             <p style={{ color: "rgba(255,255,255,.88)", fontSize: 14, lineHeight: 1.55, margin: "12px 0 18px", maxWidth: 320 }}>
               {lang === "jp"
                 ? "京都で最も成長中の国際サークル。新しい文化に触れ、新しい仲間と出会おう✨️"
@@ -177,19 +175,11 @@ export function PublicSite({
           </div>
         </div>
 
-        <div style={{ padding: "0 18px 30px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="feed-grid">
           {list.map((e) => (
             <EventCard key={e.id} event={e} lang={lang} playful={playful} />
           ))}
-          <div
-            style={{
-              textAlign: "center",
-              color: "var(--ink-faint)",
-              fontSize: 12,
-              padding: "12px 0 4px",
-              fontFamily: "var(--font-display)",
-            }}
-          >
+          <div className="feed-foot" style={{ textAlign: "center", color: "var(--ink-faint)", fontSize: 12, padding: "16px 0 4px", fontFamily: "var(--font-display)" }}>
             ボーダレス · Borderless Kyoto
           </div>
         </div>

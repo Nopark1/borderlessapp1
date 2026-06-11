@@ -30,10 +30,10 @@ export function AdminMembers({ lang, members }: { lang: Lang; members: MemberRow
   const repeat = members.length ? Math.round((members.filter((m) => m.attended >= 3).length / members.length) * 100) : 0;
 
   return (
-    <div style={{ padding: "26px 30px 40px" }}>
+    <div className="adm-pad" style={{ padding: "26px 30px 40px" }}>
       <PageHead title={t("membersAdm", lang)} sub={`${members.length} ${t("allMembers", lang)}`} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 22 }}>
+      <div className="metric-grid" style={{ marginBottom: 22 }}>
         <Metric label={t("activeMembers", lang)} value={active} sub={lang === "jp" ? "直近60日に参加" : "active last 60 days"} />
         <Metric label={t("retention", lang)} value={repeat + "%"} sub={lang === "jp" ? "3回以上参加" : "attended 3+ events"} accent="var(--success)" />
         <Metric label={t("lifetimeSpend", lang)} value={yen(totalSpend)} sub={lang === "jp" ? "全会員合計" : "all members"} />
@@ -48,7 +48,7 @@ export function AdminMembers({ lang, members }: { lang: Lang; members: MemberRow
           </div>
           <span style={{ fontSize: 12, color: "var(--ink-faint)", fontWeight: 600 }}>{list.length} {lang === "jp" ? "件" : "results"}</span>
         </div>
-        <div style={{ maxHeight: 420, overflowY: "auto" }}>
+        <div className="tbl-wrap" style={{ maxHeight: 420, overflowY: "auto" }}>
           <table className="tbl">
             <thead style={{ position: "sticky", top: 0, background: "#fff", zIndex: 2 }}>
               <tr>

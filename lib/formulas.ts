@@ -22,9 +22,18 @@ export const pointsFor = (e: Pick<Event, "price">): number => {
   return p <= 0 ? 5 : Math.floor(p / 100);
 };
 
-// Invite bonus — credited to the INVITER when their guest actually attends.
-// +10 for a brand-new guest, +5 for their 2nd/3rd time (4th+: none).
-export const inviteBonus = { fresh: 10, returning: 5 } as const;
+// Invite bonus — credited to the referrer when their friend ATTENDS an event,
+// scaling with the friend's number of attendances:
+//   1st event → +5,  2nd → +10,  3rd → +15,  4th+ → none.
+export const inviteBonus = { first: 5, second: 10, third: 15 } as const;
+
+/** Bonus for the referrer, given how many events the friend attended BEFORE this one. */
+export function inviteBonusFor(priorAttended: number): number {
+  if (priorAttended <= 0) return inviteBonus.first; // their 1st time
+  if (priorAttended === 1) return inviteBonus.second; // 2nd
+  if (priorAttended === 2) return inviteBonus.third; // 3rd
+  return 0; // 4th+
+}
 
 // Break-even: how many paying attendees cover the event's total cost.
 export const breakEven = (e: Pick<Event, "price" | "cost">): number =>

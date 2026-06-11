@@ -26,6 +26,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export function MemberDashboard({ data }: { data: DashboardData }) {
   const [lang, setLang] = useState<Lang>("en");
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const firstName = data.name.split(" ")[0];
   const tierLabel = lang === "jp" ? data.tier.jp : data.tier.key;
@@ -141,32 +142,38 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
 
           {/* invite a friend */}
           <div className="card" style={{ padding: "15px 16px", marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
               <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--primary-soft)", display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 38px" }}>
                 <Icon name="users" size={18} color="var(--primary)" />
               </div>
               <div style={{ fontWeight: 800, fontSize: 15, fontFamily: "var(--font-display)", whiteSpace: "nowrap" }}>{t("inviteFriend", lang)}</div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 13 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5 }}>
-                <span style={{ background: "var(--success)", color: "#fff", fontWeight: 800, fontSize: 11, padding: "3px 9px", borderRadius: 7, whiteSpace: "nowrap" }}>+{inviteBonus.fresh} pt</span>
-                <span style={{ color: "var(--ink-soft)", fontWeight: 600 }}>{t("inviteRule1", lang)}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5 }}>
-                <span style={{ background: "var(--gold)", color: "#fff", fontWeight: 800, fontSize: 11, padding: "3px 9px", borderRadius: 7, whiteSpace: "nowrap" }}>+{inviteBonus.returning} pt</span>
-                <span style={{ color: "var(--ink-soft)", fontWeight: 600 }}>{t("inviteRule2", lang)}</span>
-              </div>
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600, marginBottom: 10 }}>
+              {lang === "jp" ? "招待した友達がイベントに参加すると獲得：" : "Earn points when a friend you invited attends:"}
             </div>
-            <div style={{ display: "flex", gap: 9, alignItems: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 13 }}>
+              {[
+                { c: "var(--success)", pt: inviteBonus.first, label: lang === "jp" ? "友達の1回目の参加" : "their 1st event" },
+                { c: "var(--gold)", pt: inviteBonus.second, label: lang === "jp" ? "友達の2回目の参加" : "their 2nd event" },
+                { c: "var(--primary)", pt: inviteBonus.third, label: lang === "jp" ? "友達の3回目の参加" : "their 3rd event" },
+              ].map((r) => (
+                <div key={r.pt} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5 }}>
+                  <span style={{ background: r.c, color: "#fff", fontWeight: 800, fontSize: 11, padding: "3px 9px", borderRadius: 7, whiteSpace: "nowrap" }}>+{r.pt} pt</span>
+                  <span style={{ color: "var(--ink-soft)", fontWeight: 600 }}>{r.label}</span>
+                </div>
+              ))}
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-faint)", display: "block", marginBottom: 6 }}>
+              {lang === "jp" ? "あなたの友達コード" : "Your friend code"}
+            </span>
+            <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 9 }}>
               <div style={{ flex: 1, border: "1.5px dashed var(--line)", borderRadius: 10, padding: "9px 13px", fontFamily: "var(--font-display)", fontWeight: 700, letterSpacing: ".12em", color: "var(--primary)", fontSize: 14 }}>
                 {data.inviteCode}
               </div>
               <button
                 className="btn btn-dark btn-sm"
                 onClick={() => {
-                  try {
-                    navigator.clipboard?.writeText(data.inviteCode);
-                  } catch {}
+                  try { navigator.clipboard?.writeText(data.inviteCode); } catch {}
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1500);
                 }}
@@ -174,6 +181,19 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
                 {copied ? t("copied", lang) : t("copyCode", lang)}
               </button>
             </div>
+            <button
+              className="btn btn-ghost btn-sm btn-block"
+              onClick={() => {
+                try {
+                  const link = `${window.location.origin}/login?mode=signup&ref=${encodeURIComponent(data.inviteCode)}`;
+                  navigator.clipboard?.writeText(link);
+                } catch {}
+                setCopiedLink(true);
+                setTimeout(() => setCopiedLink(false), 1500);
+              }}
+            >
+              <Icon name="share" size={14} color="var(--ink)" /> {copiedLink ? t("copied", lang) : lang === "jp" ? "招待リンクをコピー" : "Copy invite link"}
+            </button>
           </div>
 
           {/* next events */}

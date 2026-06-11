@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { buildInsertRow, buildUpdateRow } from "@/lib/events";
 import { seriesDates, slugify } from "@/lib/recurrence";
-import { pointsFor, inviteBonus } from "@/lib/formulas";
+import { pointsFor, inviteBonusFor } from "@/lib/formulas";
 import type { EventInput, Recurrence, EventStatus, SaveResult } from "@/lib/types";
 
 async function adminClient() {
@@ -134,21 +134,22 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
   const present = new Set(presentIds);
 
   try {
-    // event (for pricing)
+    // event (for pricing + date)
     const { data: ev, error: evErr } = await supabase
       .from("events")
-      .select("id, price")
+      .select("id, price, date")
       .eq("id", eventId)
       .single();
     if (evErr || !ev) return { error: evErr?.message || "Event not found." };
     const per = pointsFor({ price: ev.price as number });
+    const evDate = ev.date as string;
 
     // all RSVPs for this event
     const { data: rsvps } = await supabase
       .from("rsvps")
-      .select("member_id, invited_by")
+      .select("member_id")
       .eq("event_id", eventId);
-    const rows = (rsvps ?? []) as { member_id: string; invited_by: string | null }[];
+    const rows = (rsvps ?? []) as { member_id: string }[];
 
     // 1) update attendance on each rsvp
     const presentList = rows.filter((r) => present.has(r.member_id)).map((r) => r.member_id);
@@ -170,7 +171,7 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
       .from("points_ledger")
       .delete()
       .eq("event_id", eventId)
-      .in("kind", ["participation", "invite_fresh", "invite_returning"]);
+      .in("kind", ["participation", "invite_fresh", "invite_returning", "invite"]);
 
     const ledger: Array<{ member_id: string; event_id: string; kind: string; points: number }> = [];
 
@@ -179,29 +180,34 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
       ledger.push({ member_id: id, event_id: eventId, kind: "participation", points: per });
     }
 
-    // invite bonuses: credit the inviter when their guest attends
-    const guestsWithInviter = rows.filter((r) => present.has(r.member_id) && r.invited_by);
-    if (guestsWithInviter.length) {
-      const guestIds = guestsWithInviter.map((r) => r.member_id);
-      // prior attended count per guest (excluding this event)
-      const { data: priors } = await supabase
-        .from("rsvps")
-        .select("member_id")
-        .in("member_id", guestIds)
-        .eq("attended", true)
-        .neq("event_id", eventId);
-      const priorCount: Record<string, number> = {};
-      for (const p of (priors ?? []) as { member_id: string }[]) {
-        priorCount[p.member_id] = (priorCount[p.member_id] || 0) + 1;
+    // referral bonuses: credit the referrer based on the friend's attendance count
+    if (presentList.length) {
+      const { data: mems } = await supabase
+        .from("members")
+        .select("id, referred_by")
+        .in("id", presentList);
+      const referrerOf: Record<string, string | null> = {};
+      for (const m of (mems ?? []) as { id: string; referred_by: string | null }[]) {
+        referrerOf[m.id] = m.referred_by;
       }
-      for (const g of guestsWithInviter) {
-        const prior = priorCount[g.member_id] || 0;
-        if (prior === 0) {
-          ledger.push({ member_id: g.invited_by!, event_id: eventId, kind: "invite_fresh", points: inviteBonus.fresh });
-        } else if (prior <= 2) {
-          ledger.push({ member_id: g.invited_by!, event_id: eventId, kind: "invite_returning", points: inviteBonus.returning });
+      const friends = presentList.filter((id) => referrerOf[id]);
+      if (friends.length) {
+        // count each friend's attendances on or before this event's date (excluding this one)
+        const { data: att } = await supabase
+          .from("rsvps")
+          .select("member_id, event_id, events(date)")
+          .in("member_id", friends)
+          .eq("attended", true);
+        const prior: Record<string, number> = {};
+        for (const r of (att ?? []) as unknown as Array<{ member_id: string; event_id: string; events: { date: string } | null }>) {
+          if (r.event_id === eventId) continue;
+          const d = r.events?.date;
+          if (d && d <= evDate) prior[r.member_id] = (prior[r.member_id] || 0) + 1;
         }
-        // 4th+ time (prior >= 3): no bonus
+        for (const fid of friends) {
+          const bonus = inviteBonusFor(prior[fid] || 0);
+          if (bonus > 0) ledger.push({ member_id: referrerOf[fid]!, event_id: eventId, kind: "invite", points: bonus });
+        }
       }
     }
 

@@ -13,9 +13,11 @@ type Screen = "form" | "magic-sent" | "confirm-sent";
 export function AuthForm({
   initialMode,
   admin = false,
+  initialRef = "",
 }: {
   initialMode: "login" | "signup";
   admin?: boolean;
+  initialRef?: string;
 }) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
@@ -23,6 +25,7 @@ export function AuthForm({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [friendCode, setFriendCode] = useState(initialRef);
   const [screen, setScreen] = useState<Screen>("form");
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -34,6 +37,14 @@ export function AuthForm({
 
   function notConfigured() {
     setErrorMsg(lang === "jp" ? "Supabase が未設定です（.env.local を確認）。" : "Supabase isn't connected yet (check .env.local).");
+  }
+
+  // user metadata sent on sign-up (name + optional friend/referral code)
+  function signupMeta(): Record<string, string> | undefined {
+    const d: Record<string, string> = {};
+    if (!isLogin && name) d.name = name;
+    if (!isLogin && friendCode.trim()) d.ref_code = friendCode.trim();
+    return Object.keys(d).length ? d : undefined;
   }
 
   async function submitPassword(e: React.FormEvent) {
@@ -54,7 +65,7 @@ export function AuthForm({
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: name ? { name } : undefined, emailRedirectTo: redirectTo() },
+        options: { data: signupMeta(), emailRedirectTo: redirectTo() },
       });
       setBusy(false);
       if (error) setErrorMsg(error.message);
@@ -80,7 +91,7 @@ export function AuthForm({
     setBusy(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo(), shouldCreateUser: !admin, data: !isLogin && name ? { name } : undefined },
+      options: { emailRedirectTo: redirectTo(), shouldCreateUser: !admin, data: signupMeta() },
     });
     setBusy(false);
     if (error) setErrorMsg(error.message);
@@ -181,6 +192,23 @@ export function AuthForm({
                   <span style={labelStyle}>{t("password", lang)}</span>
                   <input style={inputStyle} type="password" required minLength={6} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </label>
+
+                {!isLogin && !admin && (
+                  <label style={{ display: "block", marginBottom: 13 }}>
+                    <span style={labelStyle}>
+                      {lang === "jp" ? "友達コード（任意）" : "Friend code (optional)"}
+                    </span>
+                    <input
+                      style={inputStyle}
+                      placeholder={lang === "jp" ? "例：AB12CD" : "e.g. AB12CD"}
+                      value={friendCode}
+                      onChange={(e) => setFriendCode(e.target.value)}
+                    />
+                    <span style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginTop: 5 }}>
+                      {lang === "jp" ? "招待してくれた友達のコードがあれば入力してください。" : "Got a code from a friend who invited you? Enter it here."}
+                    </span>
+                  </label>
+                )}
 
                 {errorMsg && <div style={{ fontSize: 12.5, color: "var(--danger)", fontWeight: 600, marginBottom: 12 }}>{errorMsg}</div>}
 

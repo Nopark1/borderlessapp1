@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { mode?: string };
+  searchParams: { mode?: string; ref?: string };
 }) {
   // Already signed in? Go straight to the member area.
   const supabase = createClient();
@@ -18,10 +18,12 @@ export default async function LoginPage({
     if (user) redirect("/me");
   }
 
-  const mode = searchParams.mode === "signup" ? "signup" : "login";
+  const ref = searchParams.ref?.trim() || "";
+  // an invite link (?ref=CODE) opens straight into sign-up with the code prefilled
+  const mode = searchParams.mode === "signup" || ref ? "signup" : "login";
   return (
     <main className="stage">
-      <AuthForm initialMode={mode} />
+      <AuthForm initialMode={mode} initialRef={ref} />
     </main>
   );
 }

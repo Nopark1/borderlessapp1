@@ -51,6 +51,7 @@ export async function getMemberDashboard(
   let upcoming: Event[] = [];
   let history: HistoryRow[] = [];
   let rewards: Reward[] = seedRewards;
+  let inviteCode = "";
 
   try {
     // --- member profile ---
@@ -64,6 +65,14 @@ export async function getMemberDashboard(
       handle = member.handle || "";
       joined = member.joined || joined;
       isAdmin = Boolean(member.is_admin);
+    }
+
+    // invite code (best-effort — column may not exist until the referrals migration runs)
+    try {
+      const { data: codeRow } = await supabase.from("members").select("invite_code").eq("id", user.id).maybeSingle();
+      if (codeRow?.invite_code) inviteCode = codeRow.invite_code as string;
+    } catch {
+      /* ignore */
     }
 
     // --- points balance = SUM(points_ledger.points) ---
@@ -142,7 +151,7 @@ export async function getMemberDashboard(
     attended,
     showRate,
     streak,
-    inviteCode: inviteCodeFrom(handle, name),
+    inviteCode: inviteCode || inviteCodeFrom(handle, name),
     upcoming,
     history,
     rewards,

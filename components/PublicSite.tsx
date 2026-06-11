@@ -115,25 +115,23 @@ export function PublicSite({
             {signedIn ? (
               <Link
                 href="/me"
-                title="Account"
                 style={{
                   all: "unset",
                   cursor: "pointer",
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 14px",
+                  borderRadius: 999,
                   background: "var(--primary)",
                   color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-display)",
                   fontWeight: 700,
-                  fontSize: 15,
-                  boxShadow: "0 2px 10px rgba(0,0,0,.35)",
+                  fontSize: 12.5,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 10px rgba(0,0,0,.3)",
                 }}
               >
-                <Icon name="user" size={18} color="#fff" />
+                <Icon name="user" size={14} color="#fff" /> {lang === "jp" ? "マイページ" : "My profile"}
               </Link>
             ) : (
               <Link

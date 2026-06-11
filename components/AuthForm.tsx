@@ -10,7 +10,13 @@ import type { Lang } from "@/lib/types";
 
 type Screen = "form" | "magic-sent" | "confirm-sent";
 
-export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
+export function AuthForm({
+  initialMode,
+  admin = false,
+}: {
+  initialMode: "login" | "signup";
+  admin?: boolean;
+}) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
@@ -21,14 +27,15 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const isLogin = mode === "login";
-  const redirectTo = () => `${window.location.origin}/auth/callback?next=/me`;
+  // admins always sign in (no public sign-up); members can toggle login/signup
+  const isLogin = admin ? true : mode === "login";
+  const next = admin ? "/admin" : "/me";
+  const redirectTo = () => `${window.location.origin}/auth/callback?next=${next}`;
 
   function notConfigured() {
     setErrorMsg(lang === "jp" ? "Supabase が未設定です（.env.local を確認）。" : "Supabase isn't connected yet (check .env.local).");
   }
 
-  // --- email + password ---
   async function submitPassword(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
@@ -40,7 +47,7 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
       setBusy(false);
       if (error) setErrorMsg(error.message);
       else {
-        router.push("/me");
+        router.push(next);
         router.refresh();
       }
     } else {
@@ -52,15 +59,14 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
       setBusy(false);
       if (error) setErrorMsg(error.message);
       else if (data.session) {
-        router.push("/me");
+        router.push(next);
         router.refresh();
       } else {
-        setScreen("confirm-sent"); // email confirmation required
+        setScreen("confirm-sent");
       }
     }
   }
 
-  // --- magic link (passwordless) ---
   async function sendMagicLink() {
     setErrorMsg("");
     const supabase = createClient();
@@ -72,14 +78,13 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
     setBusy(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo(), shouldCreateUser: true, data: !isLogin && name ? { name } : undefined },
+      options: { emailRedirectTo: redirectTo(), shouldCreateUser: !admin, data: !isLogin && name ? { name } : undefined },
     });
     setBusy(false);
     if (error) setErrorMsg(error.message);
     else setScreen("magic-sent");
   }
 
-  // --- google ---
   async function signInWithGoogle() {
     setErrorMsg("");
     const supabase = createClient();
@@ -112,6 +117,13 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
     );
   }
 
+  const title = admin
+    ? lang === "jp" ? "管理者ログイン" : "Admin sign in"
+    : isLogin ? t("welcome", lang) : t("joinTitle", lang);
+  const perk = admin
+    ? lang === "jp" ? "管理者アカウントでログインしてダッシュボードへ。" : "Sign in with your organizer account to open the dashboard."
+    : t("authPerk", lang);
+
   return (
     <div className="bl-root">
       <header className="bl-topbar">
@@ -121,7 +133,7 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
           </span>
           <span className="bx">
             <b>BORDERLESS</b>
-            <span>{t("tagline", lang)}</span>
+            <span>{admin ? (lang === "jp" ? "管理画面" : "Admin") : t("tagline", lang)}</span>
           </span>
         </Link>
         <div className="lang-toggle">
@@ -145,12 +157,12 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
           ) : (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                <span className="bl-emblem" aria-hidden="true" style={{ width: 44, height: 44, flex: "0 0 44px" }}>
-                  <Icon name="globe" size={22} color="#fff" />
+                <span className="bl-emblem" aria-hidden="true" style={{ width: 44, height: 44, flex: "0 0 44px", background: admin ? "radial-gradient(120% 120% at 30% 25%, var(--ink) 0%, #1a1410 100%)" : undefined }}>
+                  <Icon name={admin ? "scale" : "globe"} size={22} color="#fff" />
                 </span>
-                <h2 style={{ fontSize: 22 }}>{isLogin ? t("welcome", lang) : t("joinTitle", lang)}</h2>
+                <h2 style={{ fontSize: 22 }}>{title}</h2>
               </div>
-              <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, margin: "0 0 20px" }}>{t("authPerk", lang)}</p>
+              <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, margin: "0 0 20px" }}>{perk}</p>
 
               <form onSubmit={submitPassword}>
                 {!isLogin && (
@@ -170,12 +182,11 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
 
                 {errorMsg && <div style={{ fontSize: 12.5, color: "var(--danger)", fontWeight: 600, marginBottom: 12 }}>{errorMsg}</div>}
 
-                <button type="submit" className="btn btn-primary btn-block" style={{ padding: "14px" }} disabled={busy}>
+                <button type="submit" className={"btn btn-block " + (admin ? "btn-dark" : "btn-primary")} style={{ padding: "14px" }} disabled={busy}>
                   {busy ? (lang === "jp" ? "処理中…" : "Working…") : isLogin ? t("signIn", lang) : t("createAcc", lang)}
                 </button>
               </form>
 
-              {/* magic link alternative */}
               <button
                 onClick={sendMagicLink}
                 disabled={busy}
@@ -193,15 +204,30 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
                 <span style={{ fontWeight: 700, color: "#4285F4" }}>G</span> {t("continueG", lang)}
               </button>
 
-              <div style={{ textAlign: "center", fontSize: 13, color: "var(--ink-soft)", marginTop: 18 }}>
-                {isLogin ? t("noAccount", lang) : t("haveAccount", lang)}{" "}
-                <button
-                  onClick={() => { setMode(isLogin ? "signup" : "login"); setErrorMsg(""); }}
-                  style={{ all: "unset", color: "var(--primary)", fontWeight: 700, cursor: "pointer" }}
-                >
-                  {isLogin ? t("createAcc", lang) : t("signIn", lang)}
-                </button>
-              </div>
+              {admin ? (
+                <div style={{ textAlign: "center", fontSize: 13, color: "var(--ink-soft)", marginTop: 18 }}>
+                  <Link href="/login" style={{ color: "var(--primary)", fontWeight: 700 }}>
+                    ← {lang === "jp" ? "メンバーログイン" : "Member sign in"}
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div style={{ textAlign: "center", fontSize: 13, color: "var(--ink-soft)", marginTop: 18 }}>
+                    {isLogin ? t("noAccount", lang) : t("haveAccount", lang)}{" "}
+                    <button
+                      onClick={() => { setMode(isLogin ? "signup" : "login"); setErrorMsg(""); }}
+                      style={{ all: "unset", color: "var(--primary)", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      {isLogin ? t("createAcc", lang) : t("signIn", lang)}
+                    </button>
+                  </div>
+                  <div style={{ textAlign: "center", marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line-soft)" }}>
+                    <Link href="/admin/login" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "var(--ink-soft)" }}>
+                      <Icon name="scale" size={14} color="var(--ink-soft)" /> {lang === "jp" ? "管理者の方はこちら" : "I am an admin"}
+                    </Link>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

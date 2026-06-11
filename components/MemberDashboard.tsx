@@ -73,10 +73,9 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"
-                  title="Sign out"
-                  style={{ all: "unset", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ all: "unset", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 999, background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 12, fontWeight: 700 }}
                 >
-                  <Icon name="arrowR" size={17} color="#fff" />
+                  {lang === "jp" ? "ログアウト" : "Log out"}
                 </button>
               </form>
             </div>

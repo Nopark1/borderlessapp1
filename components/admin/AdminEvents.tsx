@@ -66,6 +66,7 @@ export function AdminEvents({
                 <div
                   key={e.id}
                   onClick={() => onEdit(e)}
+                  className="tap-card"
                   style={{ cursor: "pointer", position: "relative", background: "#fff", border: "1px solid var(--line)", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}
                 >
                   <div style={{ height: 90 }}>

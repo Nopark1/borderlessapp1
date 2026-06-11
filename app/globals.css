@@ -478,6 +478,17 @@ table.tbl tr:hover td { background: #fbf6ee; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
+/* button + admin-control feedback (the public site has its own playful overrides;
+   this gives the admin dashboard the same lift-on-hover / press-on-click feel) */
+.btn:hover { transform: translateY(-1px); }
+.adm-side .nav-i:active { transform: scale(.985); }
+.adm-newbtn { transition: transform .14s ease, background .15s ease; }
+.adm-newbtn:hover { transform: translateY(-1px); }
+.adm-newbtn:active { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover, .adm-newbtn:hover, .adm-newbtn:active, .adm-side .nav-i:active { transform: none; }
+}
+
 /* hero: slow ken-burns drift/zoom */
 @keyframes heroDrift {
   0%   { transform: scale(1.05); }

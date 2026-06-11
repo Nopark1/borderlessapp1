@@ -71,7 +71,7 @@ export function AdminApp({
     <div className="admin-shell">
       {/* sidebar */}
       <div className="adm-side">
-        <div className="adm-brand" style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 10px 18px" }}>
+        <Link href="/" className="adm-brand" style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 10px 18px" }} title={lang === "jp" ? "サイトを表示" : "View site"}>
           <span className="bl-emblem" style={{ width: 34, height: 34, flex: "0 0 34px" }} aria-hidden="true">
             <Icon name="globe" size={18} color="#fff" />
           </span>
@@ -79,7 +79,7 @@ export function AdminApp({
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: "#f6efe2", letterSpacing: ".1em", fontSize: 15 }}>BORDERLESS</div>
             <div style={{ fontSize: 9.5, letterSpacing: ".2em", color: "#9a8b7d", textTransform: "uppercase" }}>{lang === "jp" ? "管理画面" : "Admin"}</div>
           </div>
-        </div>
+        </Link>
         {nav.map((n) => (
           <div
             key={n.k}
@@ -98,6 +98,9 @@ export function AdminApp({
         </button>
 
         <div className="adm-foot">
+          <Link href="/" className="nav-i" style={{ marginBottom: 10 }}>
+            <Icon name="home" size={17} color="#c9bcab" /> {lang === "jp" ? "サイトを表示" : "View site"}
+          </Link>
           <div className="lang-toggle" style={{ marginBottom: 12 }}>
             <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button>
             <button className={lang === "jp" ? "on" : ""} onClick={() => setLang("jp")}>日本</button>

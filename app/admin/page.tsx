@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
 import { AdminApp } from "@/components/admin/AdminApp";
 import { createClient } from "@/lib/supabase-server";
-import { getAdminEvents } from "@/lib/events";
-import { getOverview, getMembersTable, getRewards } from "@/lib/admin-stats";
-import { getSettings } from "@/lib/settings";
+import { getAdminBundle } from "@/lib/admin-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -24,22 +22,16 @@ export default async function AdminPage() {
     .maybeSingle();
   if (!member?.is_admin) redirect("/me");
 
-  const [events, overview, members, rewards, settings] = await Promise.all([
-    getAdminEvents(supabase),
-    getOverview(supabase),
-    getMembersTable(supabase),
-    getRewards(supabase),
-    getSettings(supabase),
-  ]);
+  const bundle = await getAdminBundle(supabase);
 
   return (
     <main className="admin-stage">
       <AdminApp
-        initialEvents={events}
-        overview={overview}
-        members={members}
-        rewards={rewards}
-        heroImageUrl={settings.heroImageUrl}
+        initialEvents={bundle.events}
+        overview={bundle.overview}
+        members={bundle.members}
+        rewards={bundle.rewards}
+        heroImageUrl={bundle.heroImageUrl}
         email={user.email ?? "admin"}
       />
     </main>

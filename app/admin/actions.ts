@@ -29,6 +29,25 @@ export async function saveEvent(
   if ("error" in ctx) return { error: ctx.error };
   const { supabase } = ctx;
 
+  // displayed RSVP count = online sign-ups + admin-set "known" RSVPs.
+  // Done as a best-effort secondary write so saves still work before the
+  // known_rsvp migration (0003) is applied.
+  async function applyKnown(eventId: string, known: number) {
+    try {
+      const { count } = await supabase
+        .from("rsvps")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", eventId);
+      await supabase
+        .from("events")
+        .update({ known_rsvp: known, rsvp: (count ?? 0) + known })
+        .eq("id", eventId);
+    } catch {
+      /* column not present yet — ignore */
+    }
+  }
+  const known = Math.max(0, Number(input.knownRsvp) || 0);
+
   try {
     if (input.id) {
       // --- edit existing ---
@@ -37,6 +56,7 @@ export async function saveEvent(
         .update(buildUpdateRow(input, status))
         .eq("id", input.id);
       if (error) return { error: error.message };
+      await applyKnown(input.id, known);
       revalidatePath("/admin");
       revalidatePath("/");
       return { ok: true, count: 1 };
@@ -54,8 +74,11 @@ export async function saveEvent(
       r.slug = `${base}-${rnd()}${i ? "-" + (i + 1) : ""}`;
     });
 
-    const { error } = await supabase.from("events").insert(rows);
+    const { data: inserted, error } = await supabase.from("events").insert(rows).select("id");
     if (error) return { error: error.message };
+    if (known > 0 && inserted) {
+      for (const row of inserted as { id: string }[]) await applyKnown(row.id, known);
+    }
     revalidatePath("/admin");
     revalidatePath("/");
     return { ok: true, count: rows.length };

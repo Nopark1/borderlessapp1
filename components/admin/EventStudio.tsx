@@ -44,6 +44,7 @@ export function EventStudio({
     descEn: initial?.desc.en || "",
     descJp: initial?.desc.jp || "",
     attended: initial?.attended ?? 0,
+    knownRsvp: initial?.knownRsvp ?? 0,
     repeat: "none" as RepeatFreq,
     repeatCount: 4,
   }));
@@ -124,6 +125,7 @@ export function EventStudio({
       descEn: f.descEn,
       descJp: f.descJp,
       attended: isCompletedEdit ? Number(f.attended) || 0 : undefined,
+      knownRsvp: Number(f.knownRsvp) || 0,
     };
   }
 
@@ -218,17 +220,41 @@ export function EventStudio({
           </div>
         )}
 
-        {/* RSVP'd members — existing events only */}
-        {editing && (
-          <div style={sec}>
-            <div style={secTitle}>
-              <Icon name="users" size={16} color="var(--primary)" /> {lang === "jp" ? "参加予定者" : "RSVPs"} ({rsvps.length})
+        {/* RSVPs: known (in-person) boost + the real online sign-ups */}
+        <div style={sec}>
+          <div style={secTitle}>
+            <Icon name="users" size={16} color="var(--primary)" /> {lang === "jp" ? "参加予定者" : "RSVPs"}
+          </div>
+          <div className="fg2">
+            <label>
+              <span style={lbl}>{lang === "jp" ? "対面で確定した人数（既知）" : "Known RSVPs (confirmed in person)"}</span>
+              <input type="number" min={0} style={fld} value={f.knownRsvp} onChange={(e) => set("knownRsvp", Number(e.target.value))} onFocus={onF} onBlur={onB} />
+            </label>
+            <div style={{ alignSelf: "end", paddingBottom: 8 }}>
+              <div style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 700 }}>{lang === "jp" ? "メンバーに表示される人数" : "Members will see"}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 24, color: "var(--primary)", lineHeight: 1.1 }}>
+                {rsvps.length + (Number(f.knownRsvp) || 0)} <span style={{ fontSize: 13, color: "var(--ink-faint)", fontWeight: 700 }}>{t("going", lang)}</span>
+              </div>
             </div>
-            {rsvpLoading && <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "読み込み中…" : "Loading…"}</div>}
-            {!rsvpLoading && rsvps.length === 0 && (
-              <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "まだ参加予定の会員はいません。" : "No members have RSVP'd yet."}</div>
-            )}
-            {rsvps.length > 0 && (
+          </div>
+          <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 8 }}>
+            {lang === "jp"
+              ? "既知の参加者はオンライン申込に加算され、公開サイトの参加人数になります。"
+              : "Known RSVPs are added to online sign-ups to set the count shown on the public site."}
+          </div>
+
+          <hr className="hr" style={{ margin: "14px 0" }} />
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 10 }}>
+            {lang === "jp" ? `オンライン申込（${rsvps.length}）` : `Signed up online (${rsvps.length})`}
+          </div>
+          {!editing && (
+            <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "保存後にオンライン申込が表示されます。" : "Online sign-ups appear here once the event is saved."}</div>
+          )}
+          {editing && rsvpLoading && <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "読み込み中…" : "Loading…"}</div>}
+          {editing && !rsvpLoading && rsvps.length === 0 && (
+            <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "まだオンライン申込はありません。" : "No members have signed up online yet."}</div>
+          )}
+          {editing && rsvps.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {rsvps.map((m) => (
                   <div key={m.memberId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, background: "#fbf6ee", border: "1px solid var(--line)" }}>
@@ -250,11 +276,12 @@ export function EventStudio({
                 ))}
               </div>
             )}
-            <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 10 }}>
-              {lang === "jp" ? "「削除」で誤った参加予定を取り除けます。" : "Use Remove to clear out any false or placeholder RSVPs."}
-            </div>
+            {editing && rsvps.length > 0 && (
+              <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 10 }}>
+                {lang === "jp" ? "「削除」で誤った参加予定を取り除けます。" : "Use Remove to clear out any false or placeholder RSVPs."}
+              </div>
+            )}
           </div>
-        )}
 
         {/* basics */}
         <div style={sec}>

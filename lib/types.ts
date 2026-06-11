@@ -45,10 +45,11 @@ export type Event = {
   lat: number;
   lng: number;
   invited: number;
-  rsvp?: number; // current RSVP count
+  rsvp?: number; // current RSVP count (online sign-ups + known)
   attended?: number | null; // null until checked-in
   status?: EventStatus;
   gallery?: number;
+  knownRsvp?: number; // admin-set in-person RSVPs, added to the displayed count
 };
 
 export type CategoryMeta = { en: string; jp: string; color: string };
@@ -84,6 +85,7 @@ export type EventInput = {
   descEn: string;
   descJp: string;
   attended?: number | null; // actual headcount, editable for past events
+  knownRsvp?: number; // in-person/known RSVPs to add to the displayed count
 };
 
 export type RepeatFreq = "none" | "weekly" | "biweekly" | "monthly";

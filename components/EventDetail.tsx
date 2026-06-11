@@ -45,12 +45,13 @@ export function EventDetail({
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [joined, setJoined] = useState(initialJoined);
+  const [count, setCount] = useState(event.rsvp || 0); // displayed RSVP count
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
   const past = isPast(event);
-  const spots = event.capacity - (event.rsvp || 0);
-  const goingCount = past ? event.attended || 0 : event.rsvp || 0;
+  const spots = event.capacity - count;
+  const goingCount = past ? event.attended || 0 : count;
   const avatarN = Math.min(7, Math.max(0, goingCount));
 
   function onRsvp() {
@@ -63,7 +64,12 @@ export function EventDetail({
       const res = await toggleRsvp(event.id, event.slug);
       if (res.needsLogin) router.push("/login?mode=signup");
       else if (res.error) setError(res.error);
-      else setJoined(Boolean(res.joined));
+      else {
+        const isJoined = Boolean(res.joined);
+        setJoined(isJoined);
+        setCount((c) => Math.max(0, c + (isJoined ? 1 : -1))); // instant feedback
+        router.refresh(); // reconcile with the server (trigger-updated count)
+      }
     });
   }
 

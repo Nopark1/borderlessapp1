@@ -290,6 +290,7 @@ export async function setHeroImage(url: string | null): Promise<SaveResult> {
       .from("settings")
       .upsert({ id: 1, hero_image_url: url, updated_at: new Date().toISOString() });
     if (error) return { error: error.message };
+    revalidateTag("settings");
     revalidatePath("/");
     revalidatePath("/admin");
     return { ok: true };

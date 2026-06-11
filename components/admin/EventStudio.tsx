@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { covers, categories } from "@/lib/data";
 import { breakEven, pointsFor, yen } from "@/lib/formulas";
 import { seriesDates } from "@/lib/recurrence";
 import { t, val, fmtDate, relDay } from "@/lib/i18n";
-import { saveEvent } from "@/app/admin/actions";
+import { saveEvent, listEventRsvps, removeRsvp, type RsvpMember } from "@/app/admin/actions";
 import type { Category, Event, EventInput, EventStatus, Lang, RepeatFreq } from "@/lib/types";
 
 export function EventStudio({
@@ -51,6 +51,25 @@ export function EventStudio({
 
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+
+  // real member accounts that RSVP'd to this event
+  const [rsvps, setRsvps] = useState<RsvpMember[]>([]);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+  useEffect(() => {
+    if (!initial?.id) return;
+    setRsvpLoading(true);
+    listEventRsvps(initial.id).then((r) => {
+      if (r.rsvps) setRsvps(r.rsvps);
+      setRsvpLoading(false);
+    });
+  }, [initial?.id]);
+  const doRemoveRsvp = (memberId: string) =>
+    startTransition(async () => {
+      if (!initial?.id) return;
+      const res = await removeRsvp(initial.id, memberId);
+      if (res.error) setError(res.error);
+      else setRsvps((list) => list.filter((m) => m.memberId !== memberId));
+    });
 
   const fld: React.CSSProperties = {
     width: "100%", padding: "10px 12px", borderRadius: 10, border: "1.5px solid var(--line)",
@@ -195,6 +214,44 @@ export function EventStudio({
                   ? "更新すると、この過去イベントの売上・純益・ポイントが再計算されます。"
                   : "Updating this recalculates this past event's revenue, net, and points."}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* RSVP'd members — existing events only */}
+        {editing && (
+          <div style={sec}>
+            <div style={secTitle}>
+              <Icon name="users" size={16} color="var(--primary)" /> {lang === "jp" ? "参加予定者" : "RSVPs"} ({rsvps.length})
+            </div>
+            {rsvpLoading && <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "読み込み中…" : "Loading…"}</div>}
+            {!rsvpLoading && rsvps.length === 0 && (
+              <div style={{ fontSize: 13, color: "var(--ink-faint)" }}>{lang === "jp" ? "まだ参加予定の会員はいません。" : "No members have RSVP'd yet."}</div>
+            )}
+            {rsvps.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {rsvps.map((m) => (
+                  <div key={m.memberId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, background: "#fbf6ee", border: "1px solid var(--line)" }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 13, flex: "0 0 32px" }}>
+                      {m.name[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name} <span style={{ marginLeft: 2 }}>{m.country}</span></div>
+                      {m.attended && (
+                        <span className="tag" style={{ background: "var(--success-soft)", color: "var(--success)", marginTop: 3 }}>
+                          <Icon name="check" size={11} color="var(--success)" /> {t("came", lang)}
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={() => doRemoveRsvp(m.memberId)} disabled={pending} title="Remove RSVP" style={{ all: "unset", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 10px", borderRadius: 8, color: "var(--danger)", fontSize: 12, fontWeight: 700 }}>
+                      <Icon name="x" size={14} color="var(--danger)" /> {lang === "jp" ? "削除" : "Remove"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 10 }}>
+              {lang === "jp" ? "「削除」で誤った参加予定を取り除けます。" : "Use Remove to clear out any false or placeholder RSVPs."}
             </div>
           </div>
         )}

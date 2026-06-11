@@ -213,7 +213,6 @@ export async function deleteEvent(id: string): Promise<SaveResult> {
 
 // ---- rewards ----
 export type RewardInput = { id?: string; titleEn: string; titleJp: string; cost: number; tag: string | null };
-
 export async function saveReward(r: RewardInput): Promise<SaveResult> {
   const ctx = await adminClient();
   if ("error" in ctx) return { error: ctx.error };
@@ -244,6 +243,62 @@ export async function deleteReward(id: string): Promise<SaveResult> {
     const { error } = await supabase.from("rewards").delete().eq("id", id);
     if (error) return { error: error.message };
     revalidatePath("/admin");
+    revalidatePath("/me");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+// ---- rsvps (for the event editor) ----
+export type RsvpMember = { memberId: string; name: string; country: string; attended: boolean };
+
+/** Real member accounts that RSVP'd to an event. */
+export async function listEventRsvps(
+  eventId: string
+): Promise<{ rsvps?: RsvpMember[]; error?: string }> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const { data, error } = await supabase
+      .from("rsvps")
+      .select("member_id, attended, members(name, country)")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: true });
+    if (error) return { error: error.message };
+    const rows = (data ?? []) as unknown as Array<{
+      member_id: string;
+      attended: boolean;
+      members: { name: string | null; country: string | null } | null;
+    }>;
+    return {
+      rsvps: rows.map((r) => ({
+        memberId: r.member_id,
+        name: r.members?.name || "Member",
+        country: r.members?.country || "",
+        attended: Boolean(r.attended),
+      })),
+    };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/** Remove a member's RSVP from an event (the events.rsvp count re-syncs via trigger). */
+export async function removeRsvp(eventId: string, memberId: string): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const { error } = await supabase
+      .from("rsvps")
+      .delete()
+      .eq("event_id", eventId)
+      .eq("member_id", memberId);
+    if (error) return { error: error.message };
+    revalidatePath("/admin");
+    revalidatePath("/");
     revalidatePath("/me");
     return { ok: true };
   } catch (e) {

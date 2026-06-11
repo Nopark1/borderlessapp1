@@ -210,3 +210,43 @@ export async function deleteEvent(id: string): Promise<SaveResult> {
     return { error: (e as Error).message };
   }
 }
+
+// ---- rewards ----
+export type RewardInput = { id?: string; titleEn: string; titleJp: string; cost: number; tag: string | null };
+
+export async function saveReward(r: RewardInput): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const row = {
+      id: r.id && r.id.trim() ? r.id : `r_${rnd()}${rnd()}`,
+      title_en: r.titleEn || "Reward",
+      title_jp: r.titleJp || r.titleEn || "特典",
+      cost: Math.max(0, Number(r.cost) || 0),
+      tag: r.tag === "popular" || r.tag === "limited" ? r.tag : null,
+    };
+    const { error } = await supabase.from("rewards").upsert(row);
+    if (error) return { error: error.message };
+    revalidatePath("/admin");
+    revalidatePath("/me");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function deleteReward(id: string): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const { error } = await supabase.from("rewards").delete().eq("id", id);
+    if (error) return { error: error.message };
+    revalidatePath("/admin");
+    revalidatePath("/me");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}

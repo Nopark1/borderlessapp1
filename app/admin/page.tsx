@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AdminApp } from "@/components/admin/AdminApp";
 import { createClient } from "@/lib/supabase-server";
 import { getAdminEvents } from "@/lib/events";
-import { getOverview, getMembersTable } from "@/lib/admin-stats";
+import { getOverview, getMembersTable, getRewards } from "@/lib/admin-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -23,15 +23,16 @@ export default async function AdminPage() {
     .maybeSingle();
   if (!member?.is_admin) redirect("/me");
 
-  const [events, overview, members] = await Promise.all([
+  const [events, overview, members, rewards] = await Promise.all([
     getAdminEvents(supabase),
     getOverview(supabase),
     getMembersTable(supabase),
+    getRewards(supabase),
   ]);
 
   return (
     <main className="admin-stage">
-      <AdminApp initialEvents={events} overview={overview} members={members} email={user.email ?? "admin"} />
+      <AdminApp initialEvents={events} overview={overview} members={members} rewards={rewards} email={user.email ?? "admin"} />
     </main>
   );
 }

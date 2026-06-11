@@ -83,6 +83,7 @@ export type EventInput = {
   invited: number;
   descEn: string;
   descJp: string;
+  attended?: number | null; // actual headcount, editable for past events
 };
 
 export type RepeatFreq = "none" | "weekly" | "biweekly" | "monthly";

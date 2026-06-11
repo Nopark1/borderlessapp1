@@ -154,9 +154,10 @@ export function buildInsertRow(input: EventInput, status: EventStatus, date: str
   };
 }
 
-/** Build the UPDATE patch when editing (preserves rsvp/attended/gallery). */
+/** Build the UPDATE patch when editing (preserves rsvp/gallery; attended only
+ *  changes when explicitly provided, e.g. editing a past event's headcount). */
 export function buildUpdateRow(input: EventInput, status: EventStatus) {
-  return {
+  const base = {
     cover: input.cover,
     category: input.category,
     title_en: input.titleEn || "Untitled event",
@@ -178,4 +179,7 @@ export function buildUpdateRow(input: EventInput, status: EventStatus) {
     invited: Number(input.invited) || 0,
     status,
   };
+  return input.attended !== undefined && input.attended !== null
+    ? { ...base, attended: Number(input.attended) }
+    : base;
 }

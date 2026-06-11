@@ -16,9 +16,11 @@ export const isPast = (e: Event): boolean =>
 export const yen = (n: number): string => "¥" + n.toLocaleString("en-US");
 
 // Points a member earns for ATTENDING an event — scales with entry fee.
-// ¥1,000 → 10 pts ; ¥2,500 → 25 pts.
-export const pointsFor = (e: Pick<Event, "price">): number =>
-  Math.floor((Number(e && e.price) || 0) / 100);
+// ¥1,000 → 10 pts ; ¥2,500 → 25 pts. Free events (¥0) award a flat 5 pts.
+export const pointsFor = (e: Pick<Event, "price">): number => {
+  const p = Number(e && e.price) || 0;
+  return p <= 0 ? 5 : Math.floor(p / 100);
+};
 
 // Invite bonus — credited to the INVITER when their guest actually attends.
 // +10 for a brand-new guest, +5 for their 2nd/3rd time (4th+: none).

@@ -23,6 +23,7 @@ export function EventStudio({
 }) {
   const editing = Boolean(initial?.id);
   const initStatus = (initial?.status as EventStatus) || "draft";
+  const isCompletedEdit = editing && initStatus === "completed";
 
   const [f, setF] = useState(() => ({
     titleEn: initial?.title.en || "",
@@ -42,6 +43,7 @@ export function EventStudio({
     cost: initial?.cost ?? 30000,
     descEn: initial?.desc.en || "",
     descJp: initial?.desc.jp || "",
+    attended: initial?.attended ?? 0,
     repeat: "none" as RepeatFreq,
     repeatCount: 4,
   }));
@@ -68,9 +70,11 @@ export function EventStudio({
   const price = Number(f.price) || 0;
   const cap = Number(f.capacity) || 0;
   const cost = Number(f.cost) || 0;
-  const revenue = price * cap;
+  // for past events the numbers reflect who actually came; otherwise capacity
+  const headcount = isCompletedEdit ? Number(f.attended) || 0 : cap;
+  const revenue = price * headcount;
   const pointsPer = pointsFor({ price });
-  const ptsFull = cap * pointsPer;
+  const ptsFull = headcount * pointsPer;
   const be = breakEven({ price, cost });
   const beOver = be > cap;
   const profitFull = revenue - cost;
@@ -100,6 +104,7 @@ export function EventStudio({
       invited: Number(f.invited) || 0,
       descEn: f.descEn,
       descJp: f.descJp,
+      attended: isCompletedEdit ? Number(f.attended) || 0 : undefined,
     };
   }
 
@@ -163,6 +168,34 @@ export function EventStudio({
         {error && (
           <div style={{ background: "#f8e8e3", color: "var(--danger)", fontWeight: 600, fontSize: 13, borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>
             {error}
+          </div>
+        )}
+
+        {/* attendance — past events only */}
+        {isCompletedEdit && (
+          <div style={{ ...sec, borderColor: "var(--info)", background: "#eef3f8" }}>
+            <div style={secTitle}>
+              <Icon name="users" size={16} color="var(--info)" /> {lang === "jp" ? "参加実績" : "Attendance"}
+            </div>
+            <div className="fg2">
+              <label>
+                <span style={lbl}>{lang === "jp" ? "実際に来た人数" : "People who actually came"}</span>
+                <input
+                  type="number"
+                  min={0}
+                  style={fld}
+                  value={f.attended}
+                  onChange={(e) => set("attended", Number(e.target.value))}
+                  onFocus={onF}
+                  onBlur={onB}
+                />
+              </label>
+              <div style={{ alignSelf: "end", fontSize: 12, color: "var(--ink-soft)", fontWeight: 600, lineHeight: 1.45, paddingBottom: 10 }}>
+                {lang === "jp"
+                  ? "更新すると、この過去イベントの売上・純益・ポイントが再計算されます。"
+                  : "Updating this recalculates this past event's revenue, net, and points."}
+              </div>
+            </div>
           </div>
         )}
 
@@ -338,9 +371,9 @@ export function EventStudio({
         {/* projections */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, marginTop: 16 }}>
           <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 13, padding: "13px 14px" }}>
-            <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 600 }}>{t("projRevenue", lang)}</div>
+            <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 600 }}>{isCompletedEdit ? t("actualRev", lang) : t("projRevenue", lang)}</div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 21, color: "var(--ink)", marginTop: 5 }}>{yen(revenue)}</div>
-            <div style={{ fontSize: 10.5, color: "var(--ink-faint)", fontWeight: 600, marginTop: 2 }}>{cap} × {yen(price)} {t("atCapacity", lang)}</div>
+            <div style={{ fontSize: 10.5, color: "var(--ink-faint)", fontWeight: 600, marginTop: 2 }}>{headcount} × {yen(price)} {isCompletedEdit ? (lang === "jp" ? "実績" : "actual") : t("atCapacity", lang)}</div>
           </div>
           <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 13, padding: "13px 14px" }}>
             <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 600 }}>{t("profitFull", lang)}</div>

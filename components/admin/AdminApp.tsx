@@ -7,24 +7,27 @@ import { Icon } from "../Icon";
 import { AdminEvents } from "./AdminEvents";
 import { AdminOverview } from "./AdminOverview";
 import { AdminMembers } from "./AdminMembers";
+import { AdminRewards } from "./AdminRewards";
 import { EventStudio } from "./EventStudio";
 import { duplicateEvent, deleteEvent } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
-import type { Event, Lang } from "@/lib/types";
+import type { Event, Lang, Reward } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
-type Tab = "overview" | "events" | "members";
+type Tab = "overview" | "events" | "members" | "rewards";
 type Editor = Event | "new" | null;
 
 export function AdminApp({
   initialEvents,
   overview,
   members,
+  rewards,
   email,
 }: {
   initialEvents: Event[];
   overview: OverviewData;
   members: MemberRow[];
+  rewards: Reward[];
   email: string;
 }) {
   const router = useRouter();
@@ -57,6 +60,7 @@ export function AdminApp({
     { k: "overview", i: "grid", label: t("overview", lang) },
     { k: "events", i: "calendar", label: t("eventsAdm", lang) },
     { k: "members", i: "users", label: t("membersAdm", lang) },
+    { k: "rewards", i: "gift", label: t("rewardsT", lang) },
   ];
 
   return (
@@ -123,8 +127,10 @@ export function AdminApp({
           <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onCheckin={onCheckin} onDuplicate={onDuplicate} onDelete={onDelete} />
         ) : tab === "overview" ? (
           <AdminOverview lang={lang} data={overview} />
-        ) : (
+        ) : tab === "members" ? (
           <AdminMembers lang={lang} members={members} />
+        ) : (
+          <AdminRewards lang={lang} rewards={rewards} />
         )}
         {pending && (
           <div style={{ position: "fixed", bottom: 18, right: 18, background: "var(--ink)", color: "#f6efe2", padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, boxShadow: "var(--shadow-lg)" }}>

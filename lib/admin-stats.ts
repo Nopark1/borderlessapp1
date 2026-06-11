@@ -4,8 +4,9 @@
 
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Event } from "./types";
+import type { Event, Reward } from "./types";
 import { fromRow } from "./events";
+import { rewards as seedRewards } from "./data";
 import { pointsFor, finOf, tierFor } from "./formulas";
 
 export type MonthPoint = { m: string; members: number; revenue: number; costs: number };
@@ -169,6 +170,25 @@ export async function getMembersTable(supabase: SupabaseClient): Promise<MemberR
   } catch (e) {
     console.error("[getMembersTable] failed:", (e as Error).message);
     return [];
+  }
+}
+
+/** Rewards catalog for the admin rewards tab (falls back to seed if empty). */
+export async function getRewards(supabase: SupabaseClient): Promise<Reward[]> {
+  try {
+    const { data } = await supabase
+      .from("rewards")
+      .select("id, title_en, title_jp, cost, tag")
+      .order("cost", { ascending: true });
+    if (!data || !data.length) return seedRewards;
+    return data.map((r) => ({
+      id: r.id as string,
+      title: { en: r.title_en as string, jp: r.title_jp as string },
+      cost: r.cost as number,
+      tag: (r.tag as Reward["tag"]) ?? undefined,
+    }));
+  } catch {
+    return seedRewards;
   }
 }
 

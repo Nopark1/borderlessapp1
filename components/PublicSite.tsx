@@ -21,10 +21,12 @@ const playful = true; // the public site uses the youthful "playful" vibe
 export function PublicSite({
   initialEvents,
   signedIn = false,
+  isAdmin = false,
   heroImageUrl = null,
 }: {
   initialEvents: Event[];
   signedIn?: boolean;
+  isAdmin?: boolean;
   heroImageUrl?: string | null;
 }) {
   const [lang, setLang] = useState<Lang>("en");
@@ -115,7 +117,29 @@ export function PublicSite({
               </button>
             </div>
           </div>
-          <div style={{ position: "absolute", top: 14, right: 16, zIndex: 6 }}>
+          <div style={{ position: "absolute", top: 14, right: 16, zIndex: 6, display: "flex", gap: 8 }}>
+            {signedIn && isAdmin && (
+              <Link
+                href="/admin"
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 14px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,.92)",
+                  color: "var(--ink)",
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 10px rgba(0,0,0,.28)",
+                }}
+              >
+                <Icon name="chart" size={14} color="var(--primary)" /> {t("admin", lang)}
+              </Link>
+            )}
             {signedIn ? (
               <Link
                 href="/me"

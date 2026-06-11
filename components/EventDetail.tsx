@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Cover } from "./Cover";
 import { Icon } from "./Icon";
-import { FauxMap } from "./FauxMap";
+import { EventMap } from "./EventMap";
 import { isPast, yen, pointsFor } from "@/lib/formulas";
 import { t, val, fmtDate } from "@/lib/i18n";
 import { toggleRsvp } from "@/app/events/actions";
@@ -167,7 +167,12 @@ export function EventDetail({
             )}
 
             <SectionTitle>{t("getThere", lang)}</SectionTitle>
-            <FauxMap lang={lang} />
+            <EventMap
+              lang={lang}
+              lat={event.lat}
+              lng={event.lng}
+              query={[event.venue.en || event.venue.jp, event.area.en || event.area.jp, "Kyoto, Japan"].filter(Boolean).join(", ")}
+            />
           </div>
         </div>
 

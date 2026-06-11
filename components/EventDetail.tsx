@@ -172,6 +172,7 @@ export function EventDetail({
               lat={event.lat}
               lng={event.lng}
               query={[event.venue.en || event.venue.jp, event.area.en || event.area.jp, "Kyoto, Japan"].filter(Boolean).join(", ")}
+              venueLabel={[val(event.venue, lang), val(event.area, lang)].filter(Boolean).join(" · ")}
             />
           </div>
         </div>

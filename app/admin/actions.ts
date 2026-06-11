@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { buildInsertRow, buildUpdateRow } from "@/lib/events";
 import { seriesDates, slugify } from "@/lib/recurrence";
@@ -59,6 +59,7 @@ export async function saveEvent(
       await applyKnown(input.id, known);
       revalidatePath("/admin");
       revalidatePath("/");
+      revalidateTag("events");
       return { ok: true, count: 1 };
     }
 

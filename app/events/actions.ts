@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 
 export type RsvpResult = { ok?: true; joined?: boolean; error?: string; needsLogin?: boolean };
@@ -39,6 +39,7 @@ export async function toggleRsvp(eventId: string, slug: string): Promise<RsvpRes
     revalidatePath(`/events/${slug}`);
     revalidatePath("/");
     revalidatePath("/me");
+    revalidateTag("events");
     return { ok: true, joined };
   } catch (e) {
     return { error: (e as Error).message };

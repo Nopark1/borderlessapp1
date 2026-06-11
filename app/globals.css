@@ -478,6 +478,26 @@ table.tbl tr:hover td { background: #fbf6ee; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
+/* hero: slow ken-burns drift/zoom */
+@keyframes heroDrift {
+  0%   { transform: scale(1.05); }
+  50%  { transform: scale(1.12) translate(-1%, -1%); }
+  100% { transform: scale(1.05); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pub-hero .cover-bg { animation: heroDrift 28s ease-in-out infinite; transform-origin: 60% 42%; }
+}
+
+/* gentle fade between pages on navigation */
+.route-fade { animation: routeFade .34s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes routeFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-fade { animation: none; }
+}
+
 /* ============================================================
    RESPONSIVE SITE LAYOUT — one site, mobile + desktop.
    Member/public: single column on phones, full-width on desktop.

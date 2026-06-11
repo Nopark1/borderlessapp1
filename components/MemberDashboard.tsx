@@ -9,6 +9,7 @@ import { Icon } from "./Icon";
 import { Ring } from "./Ring";
 import { Cover } from "./Cover";
 import { EmptyState } from "./EmptyState";
+import { CountUp } from "./CountUp";
 import { inviteBonus } from "@/lib/formulas";
 import { t, val, fmtDate } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
@@ -90,7 +91,7 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <Ring value={data.progress} size={104} sw={9} color="#fff" track="rgba(255,255,255,.25)">
               <div style={{ textAlign: "center", color: "#fff" }}>
-                <div className="stat-num" style={{ fontSize: 32 }}>{data.points}</div>
+                <CountUp value={data.points} className="stat-num" style={{ fontSize: 32 }} />
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", opacity: 0.85 }}>
                   {t("yourPoints", lang).toUpperCase()}
                 </div>
@@ -118,7 +119,7 @@ export function MemberDashboard({ data }: { data: DashboardData }) {
           {/* quick stats */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
             <div className="card" style={{ padding: "16px" }}>
-              <div className="stat-num" style={{ fontSize: 28, color: "var(--primary)" }}>{data.attended}</div>
+              <CountUp value={data.attended} className="stat-num" style={{ fontSize: 28, color: "var(--primary)", display: "block" }} />
               <div style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600, marginTop: 4 }}>{t("eventsAtt", lang)}</div>
             </div>
             <div className="card" style={{ padding: "16px", display: "flex", alignItems: "center", gap: 12 }}>

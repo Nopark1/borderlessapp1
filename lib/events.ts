@@ -3,6 +3,7 @@
    before the database is connected). */
 
 import "server-only";
+import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Event, Category, EventStatus, EventInput } from "./types";
 import { events as seedEvents } from "./data";
@@ -70,29 +71,34 @@ export function fromRow(r: EventRow): Event {
   };
 }
 
-/** Events visible on the public site: published + completed, soonest first. */
-export async function getPublicEvents(): Promise<Event[]> {
-  const sb = getSupabase();
-  if (!sb) return seedEvents; // not connected yet — use seed data
+/** Events visible on the public site: published + completed, soonest first.
+ *  Cached for 60s and tagged "events" — invalidated instantly on admin changes
+ *  / RSVPs via revalidateTag, so the feed is fast without going stale. */
+export const getPublicEvents = unstable_cache(
+  async (): Promise<Event[]> => {
+    const sb = getSupabase();
+    if (!sb) return seedEvents; // not connected yet — use seed data
 
-  try {
-    const { data, error } = await sb
-      .from("events")
-      .select("*")
-      .in("status", ["published", "completed"])
-      .order("date", { ascending: true });
+    try {
+      const { data, error } = await sb
+        .from("events")
+        .select("*")
+        .in("status", ["published", "completed"])
+        .order("date", { ascending: true });
 
-    if (error) {
-      console.error("[getPublicEvents] Supabase read failed, using seed data:", error.message);
+      if (error) {
+        console.error("[getPublicEvents] Supabase read failed, using seed data:", error.message);
+        return seedEvents;
+      }
+      return (data as EventRow[]).map(fromRow);
+    } catch (e) {
+      console.error("[getPublicEvents] Supabase unreachable, using seed data:", (e as Error).message);
       return seedEvents;
     }
-    return (data as EventRow[]).map(fromRow);
-  } catch (e) {
-    // Network unreachable (e.g. host blocked / offline) — degrade gracefully.
-    console.error("[getPublicEvents] Supabase unreachable, using seed data:", (e as Error).message);
-    return seedEvents;
-  }
-}
+  },
+  ["public-events"],
+  { revalidate: 60, tags: ["events"] }
+);
 
 /** A single event by slug (public read), or null. */
 export async function getEventBySlug(supabase: SupabaseClient, slug: string): Promise<Event | null> {

@@ -61,6 +61,13 @@ export function AuthForm({
       else if (data.session) {
         router.push(next);
         router.refresh();
+      } else if (data.user && (data.user.identities?.length ?? 0) === 0) {
+        // Supabase returns a user with no identities when the email already exists
+        setErrorMsg(
+          lang === "jp"
+            ? "このメールアドレスは既に登録済みです。ログインするか、上の「サインインリンク」をご利用ください。"
+            : "This email already has an account. Sign in instead, or use “Email me a sign-in link.”"
+        );
       } else {
         setScreen("confirm-sent");
       }

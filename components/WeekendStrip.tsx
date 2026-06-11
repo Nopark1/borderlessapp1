@@ -28,11 +28,11 @@ export function WeekendStrip({
         <div style={{ fontSize: 12, color: "var(--ink-faint)", fontWeight: 600, marginTop: 3 }}>{t("soonSub", lang)}</div>
       </div>
       <div className="wk-scroll">
-        {events.map((e) => {
+        {events.map((e, i) => {
           const spots = e.capacity - (e.rsvp || 0);
           const soon = daysUntil(e.date) <= 3;
           return (
-            <Link key={e.id} href={`/events/${e.slug}`} className="wk-card" style={{ display: "block" }}>
+            <Link key={e.id} href={`/events/${e.slug}`} className="wk-card tap-card" style={{ display: "block" }}>
               <div
                 style={{
                   background: "var(--surface)",
@@ -45,8 +45,8 @@ export function WeekendStrip({
                 <Cover seed={e.cover} h={116}>
                   <div style={{ position: "absolute", top: 10, left: 10 }}>
                     <span
-                      className={"sticker " + (playful ? "tilt-l" : "")}
-                      style={{ fontSize: 11.5, padding: "5px 10px", color: soon ? "var(--primary)" : "var(--ink)" }}
+                      className={"sticker " + (playful ? "wobble tilt-l" : "")}
+                      style={{ fontSize: 11.5, padding: "5px 10px", color: soon ? "var(--primary)" : "var(--ink)", animationDelay: `${-i * 0.4}s` }}
                     >
                       {soon && <Icon name="flame" size={12} color="var(--primary)" fill="var(--primary)" />} {relDay(e.date, lang)}
                     </span>

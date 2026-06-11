@@ -437,6 +437,24 @@ table.tbl tr:hover td { background: #fbf6ee; }
   .playful .wobble { animation: wobble 2.6s ease-in-out infinite; }
 }
 
+/* tappable cards — lift on hover, press down on click/touch (button-like) */
+.tap-card {
+  display: block;
+  transition: transform .16s cubic-bezier(.3, 1.4, .5, 1), box-shadow .16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .tap-card:hover { transform: translateY(-4px); }
+  .tap-card:hover .card {
+    box-shadow: 0 4px 0 var(--line), 0 22px 40px -20px rgba(43, 34, 30, .45);
+  }
+}
+.tap-card:active { transform: translateY(-1px) scale(.985); }
+.tap-card:active .card { box-shadow: 0 1px 0 var(--line), 0 8px 18px -12px rgba(43, 34, 30, .35); }
+@media (prefers-reduced-motion: reduce) {
+  .tap-card, .tap-card:hover, .tap-card:active { transform: none; }
+}
+
 /* ============================================================
    RESPONSIVE SITE LAYOUT — one site, mobile + desktop.
    Member/public: single column on phones, full-width on desktop.

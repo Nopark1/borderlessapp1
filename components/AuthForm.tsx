@@ -2,85 +2,115 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Icon } from "./Icon";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase-browser";
+import { createClient } from "@/lib/supabase-browser";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Screen = "form" | "magic-sent" | "confirm-sent";
 
 export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
+  const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<Status>("idle");
+  const [password, setPassword] = useState("");
+  const [screen, setScreen] = useState<Screen>("form");
+  const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const isLogin = mode === "login";
+  const redirectTo = () => `${window.location.origin}/auth/callback?next=/me`;
 
-  async function sendMagicLink(e: React.FormEvent) {
+  function notConfigured() {
+    setErrorMsg(lang === "jp" ? "Supabase が未設定です（.env.local を確認）。" : "Supabase isn't connected yet (check .env.local).");
+  }
+
+  // --- email + password ---
+  async function submitPassword(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
     const supabase = createClient();
-    if (!supabase) {
-      setStatus("error");
-      setErrorMsg(
-        lang === "jp"
-          ? "Supabase が未設定です（.env.local を確認）。"
-          : "Supabase isn't connected yet (check .env.local)."
-      );
-      return;
-    }
-    setStatus("sending");
-    const emailRedirectTo = `${window.location.origin}/auth/callback?next=/me`;
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo,
-        shouldCreateUser: true,
-        data: !isLogin && name ? { name } : undefined,
-      },
-    });
-    if (error) {
-      setStatus("error");
-      setErrorMsg(error.message);
+    if (!supabase) return notConfigured();
+    setBusy(true);
+    if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setBusy(false);
+      if (error) setErrorMsg(error.message);
+      else {
+        router.push("/me");
+        router.refresh();
+      }
     } else {
-      setStatus("sent");
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: name ? { name } : undefined, emailRedirectTo: redirectTo() },
+      });
+      setBusy(false);
+      if (error) setErrorMsg(error.message);
+      else if (data.session) {
+        router.push("/me");
+        router.refresh();
+      } else {
+        setScreen("confirm-sent"); // email confirmation required
+      }
     }
   }
 
+  // --- magic link (passwordless) ---
+  async function sendMagicLink() {
+    setErrorMsg("");
+    const supabase = createClient();
+    if (!supabase) return notConfigured();
+    if (!email) {
+      setErrorMsg(lang === "jp" ? "メールアドレスを入力してください。" : "Enter your email first.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo(), shouldCreateUser: true, data: !isLogin && name ? { name } : undefined },
+    });
+    setBusy(false);
+    if (error) setErrorMsg(error.message);
+    else setScreen("magic-sent");
+  }
+
+  // --- google ---
   async function signInWithGoogle() {
     setErrorMsg("");
     const supabase = createClient();
-    if (!supabase) {
-      setStatus("error");
-      setErrorMsg(
-        lang === "jp" ? "Supabase が未設定です。" : "Supabase isn't connected yet."
-      );
-      return;
-    }
+    if (!supabase) return notConfigured();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/me` },
+      options: { redirectTo: redirectTo() },
     });
-    if (error) {
-      setStatus("error");
-      setErrorMsg(error.message);
-    }
+    if (error) setErrorMsg(error.message);
   }
 
   const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "13px 15px",
-    borderRadius: 13,
-    border: "1.5px solid var(--line)",
-    background: "#fff",
-    fontSize: 14.5,
-    fontFamily: "var(--font-ui)",
-    color: "var(--ink)",
-    outline: "none",
+    width: "100%", padding: "13px 15px", borderRadius: 13, border: "1.5px solid var(--line)",
+    background: "#fff", fontSize: 14.5, fontFamily: "var(--font-ui)", color: "var(--ink)", outline: "none",
   };
+  const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "block", marginBottom: 6 };
+
+  function SentScreen({ title, body }: { title: string; body: string }) {
+    return (
+      <div style={{ textAlign: "center", padding: "20px 6px" }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", margin: "0 auto 16px", background: "var(--success-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="bell" size={28} color="var(--success)" />
+        </div>
+        <h2 style={{ fontSize: 22, marginBottom: 8 }}>{title}</h2>
+        <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.6, margin: "0 0 18px" }}>{body}</p>
+        <button className="btn btn-ghost btn-block" onClick={() => setScreen("form")}>
+          {lang === "jp" ? "戻る" : "Back"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bl-root">
@@ -102,102 +132,61 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
 
       <div className="auth-card">
         <div style={{ padding: "26px 22px 34px" }}>
-          {status === "sent" ? (
-            <div style={{ textAlign: "center", padding: "20px 6px" }}>
-              <div
-                style={{
-                  width: 64, height: 64, borderRadius: "50%", margin: "0 auto 16px",
-                  background: "var(--success-soft)", display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <Icon name="bell" size={28} color="var(--success)" />
-              </div>
-              <h2 style={{ fontSize: 22, marginBottom: 8 }}>
-                {lang === "jp" ? "メールを確認してください" : "Check your email"}
-              </h2>
-              <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.6, margin: "0 0 18px" }}>
-                {lang === "jp"
-                  ? `${email} にサインイン用のリンクを送りました。リンクをタップするとログインできます。`
-                  : `We sent a sign-in link to ${email}. Tap the link in that email to log in.`}
-              </p>
-              <button
-                className="btn btn-ghost btn-block"
-                onClick={() => { setStatus("idle"); }}
-              >
-                {lang === "jp" ? "別のメールを使う" : "Use a different email"}
-              </button>
-            </div>
+          {screen === "magic-sent" ? (
+            <SentScreen
+              title={lang === "jp" ? "メールを確認してください" : "Check your email"}
+              body={lang === "jp" ? `${email} にサインイン用のリンクを送りました。` : `We sent a sign-in link to ${email}. Tap it to log in.`}
+            />
+          ) : screen === "confirm-sent" ? (
+            <SentScreen
+              title={lang === "jp" ? "メールを確認してください" : "Confirm your email"}
+              body={lang === "jp" ? `${email} に確認リンクを送りました。リンクをタップしてアカウントを有効化し、サインインしてください。` : `We sent a confirmation link to ${email}. Tap it to activate your account, then sign in.`}
+            />
           ) : (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
                 <span className="bl-emblem" aria-hidden="true" style={{ width: 44, height: 44, flex: "0 0 44px" }}>
                   <Icon name="globe" size={22} color="#fff" />
                 </span>
-                <h2 style={{ fontSize: 22 }}>
-                  {isLogin ? t("welcome", lang) : t("joinTitle", lang)}
-                </h2>
+                <h2 style={{ fontSize: 22 }}>{isLogin ? t("welcome", lang) : t("joinTitle", lang)}</h2>
               </div>
-              <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, margin: "0 0 20px" }}>
-                {t("authPerk", lang)}
-              </p>
+              <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, margin: "0 0 20px" }}>{t("authPerk", lang)}</p>
 
-              <form onSubmit={sendMagicLink}>
+              <form onSubmit={submitPassword}>
                 {!isLogin && (
                   <label style={{ display: "block", marginBottom: 13 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "block", marginBottom: 6 }}>
-                      {t("name", lang)}
-                    </span>
-                    <input
-                      style={inputStyle}
-                      placeholder="Aoi Tanaka"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
+                    <span style={labelStyle}>{t("name", lang)}</span>
+                    <input style={inputStyle} placeholder="Aoi Tanaka" value={name} onChange={(e) => setName(e.target.value)} />
                   </label>
                 )}
                 <label style={{ display: "block", marginBottom: 13 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "block", marginBottom: 6 }}>
-                    {t("email", lang)}
-                  </span>
-                  <input
-                    style={inputStyle}
-                    type="email"
-                    required
-                    placeholder="you@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <span style={labelStyle}>{t("email", lang)}</span>
+                  <input style={inputStyle} type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </label>
+                <label style={{ display: "block", marginBottom: 13 }}>
+                  <span style={labelStyle}>{t("password", lang)}</span>
+                  <input style={inputStyle} type="password" required minLength={6} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </label>
 
-                <p style={{ fontSize: 12, color: "var(--ink-faint)", lineHeight: 1.5, margin: "2px 0 12px" }}>
-                  {lang === "jp"
-                    ? "パスワード不要。サインイン用のリンクをメールでお送りします。"
-                    : "No password needed — we'll email you a secure sign-in link."}
-                </p>
+                {errorMsg && <div style={{ fontSize: 12.5, color: "var(--danger)", fontWeight: 600, marginBottom: 12 }}>{errorMsg}</div>}
 
-                {status === "error" && (
-                  <div style={{ fontSize: 12.5, color: "var(--danger)", fontWeight: 600, marginBottom: 12 }}>
-                    {errorMsg}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-block"
-                  style={{ padding: "14px" }}
-                  disabled={status === "sending"}
-                >
-                  {status === "sending"
-                    ? lang === "jp" ? "送信中…" : "Sending…"
-                    : lang === "jp" ? "サインインリンクを送る" : "Email me a sign-in link"}
+                <button type="submit" className="btn btn-primary btn-block" style={{ padding: "14px" }} disabled={busy}>
+                  {busy ? (lang === "jp" ? "処理中…" : "Working…") : isLogin ? t("signIn", lang) : t("createAcc", lang)}
                 </button>
               </form>
 
+              {/* magic link alternative */}
+              <button
+                onClick={sendMagicLink}
+                disabled={busy}
+                style={{ all: "unset", cursor: "pointer", display: "block", textAlign: "center", width: "100%", marginTop: 14, fontSize: 13, fontWeight: 700, color: "var(--primary)" }}
+              >
+                {lang === "jp" ? "パスワードなしでメールのリンクでログイン →" : "Email me a sign-in link instead →"}
+              </button>
+
               <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
                 <div className="hr" style={{ flex: 1 }} />
-                <span style={{ fontSize: 11, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".1em" }}>
-                  {t("or", lang)}
-                </span>
+                <span style={{ fontSize: 11, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".1em" }}>{t("or", lang)}</span>
                 <div className="hr" style={{ flex: 1 }} />
               </div>
               <button className="btn btn-ghost btn-block" style={{ padding: "13px", background: "#fff" }} onClick={signInWithGoogle}>
@@ -207,7 +196,7 @@ export function AuthForm({ initialMode }: { initialMode: "login" | "signup" }) {
               <div style={{ textAlign: "center", fontSize: 13, color: "var(--ink-soft)", marginTop: 18 }}>
                 {isLogin ? t("noAccount", lang) : t("haveAccount", lang)}{" "}
                 <button
-                  onClick={() => { setMode(isLogin ? "signup" : "login"); setStatus("idle"); }}
+                  onClick={() => { setMode(isLogin ? "signup" : "login"); setErrorMsg(""); }}
                   style={{ all: "unset", color: "var(--primary)", fontWeight: 700, cursor: "pointer" }}
                 >
                   {isLogin ? t("createAcc", lang) : t("signIn", lang)}

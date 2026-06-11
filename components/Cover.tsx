@@ -69,6 +69,27 @@ export function Cover({
   dim?: number;
   fill?: boolean;
 }) {
+  // an uploaded photo (URL) instead of a gradient palette key
+  const isImage = typeof seed === "string" && (seed.startsWith("http") || seed.startsWith("/uploads") || seed.startsWith("/"));
+  if (isImage) {
+    return (
+      <div
+        className="cover"
+        style={{
+          height: fill ? "100%" : h,
+          borderRadius: radius,
+          backgroundImage: `url(${seed})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {dim > 0 && <div style={{ position: "absolute", inset: 0, background: `rgba(20,12,10,${dim})` }} />}
+        {label && <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0 }} className="scrim" />}
+        {children}
+      </div>
+    );
+  }
+
   const pal = (covers as Record<string, [string, string, string]>)[seed] || ["#8A3233", "#C4583B", "#E8A04A"];
   const [c1, c2, c3] = pal;
   const motifs: Record<string, React.ReactNode> = {

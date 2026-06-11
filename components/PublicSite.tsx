@@ -19,9 +19,11 @@ const playful = true; // the public site uses the youthful "playful" vibe
 export function PublicSite({
   initialEvents,
   signedIn = false,
+  heroImageUrl = null,
 }: {
   initialEvents: Event[];
   signedIn?: boolean;
+  heroImageUrl?: string | null;
 }) {
   const [lang, setLang] = useState<Lang>("en");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
@@ -69,7 +71,7 @@ export function PublicSite({
       <div className="bl-screen">
         {/* hero */}
         <div className="pub-hero">
-          <Cover seed="lantern" fill />
+          <Cover seed={heroImageUrl || "lantern"} fill />
           <div
             style={{
               position: "absolute",

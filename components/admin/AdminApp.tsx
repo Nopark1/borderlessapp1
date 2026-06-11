@@ -8,13 +8,14 @@ import { AdminEvents } from "./AdminEvents";
 import { AdminOverview } from "./AdminOverview";
 import { AdminMembers } from "./AdminMembers";
 import { AdminRewards } from "./AdminRewards";
+import { AdminSite } from "./AdminSite";
 import { EventStudio } from "./EventStudio";
 import { duplicateEvent, deleteEvent } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
 import type { Event, Lang, Reward } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
-type Tab = "overview" | "events" | "members" | "rewards";
+type Tab = "overview" | "events" | "members" | "rewards" | "site";
 type Editor = Event | "new" | null;
 
 export function AdminApp({
@@ -22,12 +23,14 @@ export function AdminApp({
   overview,
   members,
   rewards,
+  heroImageUrl,
   email,
 }: {
   initialEvents: Event[];
   overview: OverviewData;
   members: MemberRow[];
   rewards: Reward[];
+  heroImageUrl: string | null;
   email: string;
 }) {
   const router = useRouter();
@@ -61,6 +64,7 @@ export function AdminApp({
     { k: "events", i: "calendar", label: t("eventsAdm", lang) },
     { k: "members", i: "users", label: t("membersAdm", lang) },
     { k: "rewards", i: "gift", label: t("rewardsT", lang) },
+    { k: "site", i: "home", label: lang === "jp" ? "サイト" : "Site" },
   ];
 
   return (
@@ -129,8 +133,10 @@ export function AdminApp({
           <AdminOverview lang={lang} data={overview} />
         ) : tab === "members" ? (
           <AdminMembers lang={lang} members={members} />
-        ) : (
+        ) : tab === "rewards" ? (
           <AdminRewards lang={lang} rewards={rewards} />
+        ) : (
+          <AdminSite lang={lang} heroImageUrl={heroImageUrl} />
         )}
         {pending && (
           <div style={{ position: "fixed", bottom: 18, right: 18, background: "var(--ink)", color: "#f6efe2", padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, boxShadow: "var(--shadow-lg)" }}>

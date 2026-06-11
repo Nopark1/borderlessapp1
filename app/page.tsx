@@ -1,5 +1,6 @@
 import { PublicSite } from "@/components/PublicSite";
 import { getPublicEvents } from "@/lib/events";
+import { getSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase-server";
 
 // Always read fresh from the database (no static caching of the feed).
@@ -15,10 +16,10 @@ export default async function Home() {
     signedIn = Boolean(user);
   }
 
-  const events = await getPublicEvents();
+  const [events, settings] = await Promise.all([getPublicEvents(), getSettings(supabase)]);
   return (
     <main className="stage">
-      <PublicSite initialEvents={events} signedIn={signedIn} />
+      <PublicSite initialEvents={events} signedIn={signedIn} heroImageUrl={settings.heroImageUrl} />
     </main>
   );
 }

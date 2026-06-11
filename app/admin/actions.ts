@@ -273,6 +273,24 @@ export async function deleteReward(id: string): Promise<SaveResult> {
   }
 }
 
+// ---- site settings ----
+export async function setHeroImage(url: string | null): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const { error } = await supabase
+      .from("settings")
+      .upsert({ id: 1, hero_image_url: url, updated_at: new Date().toISOString() });
+    if (error) return { error: error.message };
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 // ---- rsvps (for the event editor) ----
 export type RsvpMember = { memberId: string; name: string; country: string; attended: boolean };
 

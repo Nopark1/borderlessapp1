@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { covers, categories } from "@/lib/data";
@@ -8,6 +8,7 @@ import { breakEven, pointsFor, yen } from "@/lib/formulas";
 import { seriesDates } from "@/lib/recurrence";
 import { t, val, fmtDate, relDay } from "@/lib/i18n";
 import { saveEvent, listEventRsvps, removeRsvp, type RsvpMember } from "@/app/admin/actions";
+import { createClient } from "@/lib/supabase-browser";
 import type { Category, Event, EventInput, EventStatus, Lang, RepeatFreq } from "@/lib/types";
 
 export function EventStudio({
@@ -52,6 +53,33 @@ export function EventStudio({
 
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+
+  // cover photo upload
+  const coverFileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const coverIsImage = typeof f.cover === "string" && (f.cover.startsWith("http") || f.cover.startsWith("/"));
+  async function onCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const supabase = createClient();
+    if (!supabase) {
+      setError(lang === "jp" ? "Supabase が未設定です。" : "Supabase isn't connected.");
+      return;
+    }
+    setUploading(true);
+    setError("");
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `events/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const up = await supabase.storage.from("images").upload(path, file, { upsert: false, cacheControl: "3600" });
+    if (up.error) {
+      setUploading(false);
+      setError(up.error.message);
+      return;
+    }
+    set("cover", supabase.storage.from("images").getPublicUrl(path).data.publicUrl);
+    setUploading(false);
+    if (coverFileRef.current) coverFileRef.current.value = "";
+  }
 
   // real member accounts that RSVP'd to this event
   const [rsvps, setRsvps] = useState<RsvpMember[]>([]);
@@ -289,6 +317,11 @@ export function EventStudio({
           <div style={{ marginBottom: 14 }}>
             <span style={lbl}>{t("coverStyle", lang)}</span>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              {coverIsImage && (
+                <div style={{ width: 64, height: 40, borderRadius: 9, overflow: "hidden", boxShadow: "0 0 0 2.5px var(--primary)" }} title={lang === "jp" ? "アップロード画像" : "Uploaded photo"}>
+                  <Cover seed={f.cover} h={40} />
+                </div>
+              )}
               {Object.keys(covers).map((k) => (
                 <button
                   key={k}
@@ -298,6 +331,20 @@ export function EventStudio({
                   <Cover seed={k} h={40} />
                 </button>
               ))}
+              <input ref={coverFileRef} type="file" accept="image/*" onChange={onCoverFile} style={{ display: "none" }} />
+              <button
+                type="button"
+                onClick={() => coverFileRef.current?.click()}
+                style={{ all: "unset", cursor: "pointer", width: 64, height: 40, borderRadius: 9, border: "1.5px dashed var(--line)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)", fontSize: 9, fontWeight: 700, gap: 2 }}
+              >
+                {uploading ? (
+                  <span>…</span>
+                ) : (
+                  <>
+                    <Icon name="download" size={14} color="var(--ink-faint)" /> {t("uploadPhoto", lang)}
+                  </>
+                )}
+              </button>
             </div>
           </div>
           <div className="fg2" style={{ marginBottom: 14 }}>

@@ -61,3 +61,31 @@ export type Reward = {
   title: Bilingual;
   tag?: "popular" | "limited";
 };
+
+/** What the admin event "studio" collects. Maps to the events table on save. */
+export type EventInput = {
+  id?: string; // present when editing
+  slug?: string;
+  cover: string;
+  category: Category;
+  titleEn: string;
+  titleJp: string;
+  date: string;
+  time: string;
+  endTime: string;
+  venueEn: string;
+  venueJp: string;
+  areaEn: string;
+  areaJp: string;
+  price: number;
+  capacity: number;
+  cost: number;
+  invited: number;
+  descEn: string;
+  descJp: string;
+};
+
+export type RepeatFreq = "none" | "weekly" | "biweekly" | "monthly";
+export type Recurrence = { freq: RepeatFreq; count: number };
+
+export type SaveResult = { ok?: true; error?: string; count?: number };

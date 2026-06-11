@@ -485,3 +485,29 @@ table.tbl tr:hover td { background: #fbf6ee; }
     max-width: 100%;
   }
 }
+
+/* ---- admin (desktop) shell ---- */
+.admin-stage {
+  min-height: 100vh;
+  padding: 22px 20px;
+  display: flex;
+  justify-content: center;
+}
+.admin-shell {
+  width: 100%;
+  max-width: 1180px;
+  display: flex;
+  min-height: 600px;
+  height: calc(100vh - 44px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+@media (max-width: 860px) {
+  .admin-stage { padding: 0; }
+  .admin-shell { flex-direction: column; height: auto; min-height: 100vh; border-radius: 0; border: 0; }
+  .adm-side { width: 100%; flex: none; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .adm-side .nav-i { flex: 1 1 auto; justify-content: center; }
+}

@@ -40,7 +40,11 @@ npm run start    # run the production build
   session handling via middleware, a bilingual `/login` flow, and the `/me` member dashboard
   (points summed from `points_ledger`, tier, streak, show-rate, upcoming RSVPs, history,
   rewards). Gated routes redirect to login. See the **Auth** section in `SUPABASE_SETUP.md`.
-- [ ] Phase 4 — Admin: events studio.
+- [x] **Phase 4 — Admin: events studio.** Admin dashboard gated to `is_admin`: events list
+  with status filter (All/Published/Draft/Past), upcoming cards (RSVP + break-even) and a past
+  finance table, plus the create/edit **studio** with a live preview computing points/attendee,
+  break-even (capacity bar), profit-if-full, projected revenue, and cost/head. Draft↔publish,
+  edit-prefilled, duplicate, delete (two-step), and recurrence (weekly/biweekly/monthly).
 - [ ] Phase 5 — Check-in & points.
 - [ ] Phase 6 — Polish & ship (PWA, Vercel, domain).
 

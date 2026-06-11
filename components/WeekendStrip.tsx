@@ -1,4 +1,5 @@
 /* "This weekend" horizontal-scroll strip (ported from public.jsx). */
+import Link from "next/link";
 import { Cover } from "./Cover";
 import { Icon } from "./Icon";
 import { yen } from "@/lib/formulas";
@@ -31,7 +32,7 @@ export function WeekendStrip({
           const spots = e.capacity - (e.rsvp || 0);
           const soon = daysUntil(e.date) <= 3;
           return (
-            <div key={e.id} className="wk-card" style={{ display: "block" }}>
+            <Link key={e.id} href={`/events/${e.slug}`} className="wk-card" style={{ display: "block" }}>
               <div
                 style={{
                   background: "var(--surface)",
@@ -82,7 +83,7 @@ export function WeekendStrip({
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>

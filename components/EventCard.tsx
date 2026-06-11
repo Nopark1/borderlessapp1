@@ -1,5 +1,5 @@
-/* Event feed card (ported from public.jsx).
-   Phase 1: static (no navigation yet — event detail arrives in a later phase). */
+/* Event feed card (ported from public.jsx). Links to the event detail page. */
+import Link from "next/link";
 import { Cover } from "./Cover";
 import { CatTag } from "./CatTag";
 import { Icon } from "./Icon";
@@ -21,7 +21,7 @@ export function EventCard({
   const past = isPast(event);
   const spots = event.capacity - (event.rsvp || 0);
   return (
-    <div className="fade-up" style={{ width: "100%" }}>
+    <Link href={`/events/${event.slug}`} className="fade-up" style={{ width: "100%", display: "block" }}>
       <div className="card" style={{ overflow: "hidden", marginBottom: 0 }}>
         <Cover seed={event.cover} h={past ? 132 : 158} label dim={past ? 0.12 : 0}>
           <div style={{ position: "absolute", top: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>
@@ -86,6 +86,6 @@ export function EventCard({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -80,6 +80,7 @@ export function EventMenu({
   lang,
   onTop,
   onEdit,
+  onCheckin,
   onDuplicate,
   onDelete,
 }: {
@@ -87,6 +88,7 @@ export function EventMenu({
   lang: Lang;
   onTop?: boolean;
   onEdit: () => void;
+  onCheckin: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
@@ -103,7 +105,7 @@ export function EventMenu({
     setOpen(false);
     setConfirm(false);
   };
-  void isPast(e); // (check-in action arrives in Phase 5)
+  const past = isPast(e);
   return (
     <div style={{ position: "relative" }} onClick={stop()}>
       <button
@@ -129,6 +131,7 @@ export function EventMenu({
             }}
           >
             <MenuItem icon="edit" label={t("editEvent", lang)} onClick={() => { close(); onEdit(); }} />
+            {!past && <MenuItem icon="checkCircle" label={t("checkIn", lang)} onClick={() => { close(); onCheckin(); }} />}
             <MenuItem icon="copy" label={t("duplicate", lang)} onClick={() => { close(); onDuplicate(); }} />
             <div style={{ height: 1, background: "var(--line-soft)", margin: "5px 4px" }} />
             {!confirm ? (

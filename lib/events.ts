@@ -92,6 +92,17 @@ export async function getPublicEvents(): Promise<Event[]> {
   }
 }
 
+/** A single event by slug (public read), or null. */
+export async function getEventBySlug(supabase: SupabaseClient, slug: string): Promise<Event | null> {
+  try {
+    const { data, error } = await supabase.from("events").select("*").eq("slug", slug).maybeSingle();
+    if (error || !data) return null;
+    return fromRow(data as EventRow);
+  } catch {
+    return null;
+  }
+}
+
 /** All events (every status), newest first — for the admin events tab. */
 export async function getAdminEvents(supabase: SupabaseClient): Promise<Event[]> {
   try {

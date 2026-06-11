@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { buildInsertRow, buildUpdateRow } from "@/lib/events";
 import { seriesDates, slugify } from "@/lib/recurrence";
+import { pointsFor, inviteBonus } from "@/lib/formulas";
 import type { EventInput, Recurrence, EventStatus, SaveResult } from "@/lib/types";
 
 async function adminClient() {
@@ -92,6 +93,103 @@ export async function duplicateEvent(id: string): Promise<SaveResult> {
     if (error) return { error: error.message };
     revalidatePath("/admin");
     return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export type CheckInResult = { ok?: true; error?: string; attended?: number; points?: number };
+
+/** Finish & record check-in: mark attendance, complete the event, and write
+ *  participation points + invite bonuses to the ledger. Safe to re-run
+ *  (it clears this event's earned-ledger rows first, then rewrites them). */
+export async function finishCheckIn(eventId: string, presentIds: string[]): Promise<CheckInResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  const present = new Set(presentIds);
+
+  try {
+    // event (for pricing)
+    const { data: ev, error: evErr } = await supabase
+      .from("events")
+      .select("id, price")
+      .eq("id", eventId)
+      .single();
+    if (evErr || !ev) return { error: evErr?.message || "Event not found." };
+    const per = pointsFor({ price: ev.price as number });
+
+    // all RSVPs for this event
+    const { data: rsvps } = await supabase
+      .from("rsvps")
+      .select("member_id, invited_by")
+      .eq("event_id", eventId);
+    const rows = (rsvps ?? []) as { member_id: string; invited_by: string | null }[];
+
+    // 1) update attendance on each rsvp
+    const presentList = rows.filter((r) => present.has(r.member_id)).map((r) => r.member_id);
+    const absentList = rows.filter((r) => !present.has(r.member_id)).map((r) => r.member_id);
+    if (presentList.length)
+      await supabase.from("rsvps").update({ attended: true }).eq("event_id", eventId).in("member_id", presentList);
+    if (absentList.length)
+      await supabase.from("rsvps").update({ attended: false }).eq("event_id", eventId).in("member_id", absentList);
+
+    // 2) complete the event
+    const { error: upErr } = await supabase
+      .from("events")
+      .update({ status: "completed", attended: presentList.length })
+      .eq("id", eventId);
+    if (upErr) return { error: upErr.message };
+
+    // 3) rewrite this event's earned-ledger rows (idempotent)
+    await supabase
+      .from("points_ledger")
+      .delete()
+      .eq("event_id", eventId)
+      .in("kind", ["participation", "invite_fresh", "invite_returning"]);
+
+    const ledger: Array<{ member_id: string; event_id: string; kind: string; points: number }> = [];
+
+    // participation points for each present member
+    for (const id of presentList) {
+      ledger.push({ member_id: id, event_id: eventId, kind: "participation", points: per });
+    }
+
+    // invite bonuses: credit the inviter when their guest attends
+    const guestsWithInviter = rows.filter((r) => present.has(r.member_id) && r.invited_by);
+    if (guestsWithInviter.length) {
+      const guestIds = guestsWithInviter.map((r) => r.member_id);
+      // prior attended count per guest (excluding this event)
+      const { data: priors } = await supabase
+        .from("rsvps")
+        .select("member_id")
+        .in("member_id", guestIds)
+        .eq("attended", true)
+        .neq("event_id", eventId);
+      const priorCount: Record<string, number> = {};
+      for (const p of (priors ?? []) as { member_id: string }[]) {
+        priorCount[p.member_id] = (priorCount[p.member_id] || 0) + 1;
+      }
+      for (const g of guestsWithInviter) {
+        const prior = priorCount[g.member_id] || 0;
+        if (prior === 0) {
+          ledger.push({ member_id: g.invited_by!, event_id: eventId, kind: "invite_fresh", points: inviteBonus.fresh });
+        } else if (prior <= 2) {
+          ledger.push({ member_id: g.invited_by!, event_id: eventId, kind: "invite_returning", points: inviteBonus.returning });
+        }
+        // 4th+ time (prior >= 3): no bonus
+      }
+    }
+
+    if (ledger.length) {
+      const { error: insErr } = await supabase.from("points_ledger").insert(ledger);
+      if (insErr) return { error: insErr.message };
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/me");
+    return { ok: true, attended: presentList.length, points: presentList.length * per };
   } catch (e) {
     return { error: (e as Error).message };
   }

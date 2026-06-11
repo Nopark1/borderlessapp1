@@ -15,6 +15,7 @@ export function AdminEvents({
   events,
   onNew,
   onEdit,
+  onCheckin,
   onDuplicate,
   onDelete,
 }: {
@@ -22,6 +23,7 @@ export function AdminEvents({
   events: Event[];
   onNew: () => void;
   onEdit: (e: Event) => void;
+  onCheckin: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
@@ -73,7 +75,7 @@ export function AdminEvents({
                     <StatusPill status={e.status as EventStatus} lang={lang} />
                   </div>
                   <div style={{ position: "absolute", top: 9, right: 9, zIndex: 20 }}>
-                    <EventMenu e={e} lang={lang} onTop onEdit={() => onEdit(e)} onDuplicate={() => onDuplicate(e.id)} onDelete={() => onDelete(e.id)} />
+                    <EventMenu e={e} lang={lang} onTop onEdit={() => onEdit(e)} onCheckin={() => onCheckin(e.id)} onDuplicate={() => onDuplicate(e.id)} onDelete={() => onDelete(e.id)} />
                   </div>
                   <div style={{ padding: "13px 15px 15px" }}>
                     <div style={{ fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 15 }}>{val(e.title, lang)}</div>
@@ -162,7 +164,7 @@ export function AdminEvents({
                       <td style={{ textAlign: "right", color: "var(--ink-soft)" }}>{yen(f.costs)}</td>
                       <td style={{ textAlign: "right", fontWeight: 800, color: f.net >= 0 ? "var(--success)" : "var(--danger)" }}>{yen(f.net)}</td>
                       <td style={{ textAlign: "right", width: 44 }}>
-                        <EventMenu e={e} lang={lang} onEdit={() => onEdit(e)} onDuplicate={() => onDuplicate(e.id)} onDelete={() => onDelete(e.id)} />
+                        <EventMenu e={e} lang={lang} onEdit={() => onEdit(e)} onCheckin={() => onCheckin(e.id)} onDuplicate={() => onDuplicate(e.id)} onDelete={() => onDelete(e.id)} />
                       </td>
                     </tr>
                   );

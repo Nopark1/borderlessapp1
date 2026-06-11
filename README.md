@@ -45,7 +45,11 @@ npm run start    # run the production build
   finance table, plus the create/edit **studio** with a live preview computing points/attendee,
   break-even (capacity bar), profit-if-full, projected revenue, and cost/head. Draft↔publish,
   edit-prefilled, duplicate, delete (two-step), and recurrence (weekly/biweekly/monthly).
-- [ ] Phase 5 — Check-in & points.
+- [x] **Phase 5 — Check-in & points.** Public event detail (`/events/[slug]`) with one-tap
+  RSVP, and the admin **check-in roster** (`/admin/checkin/[id]`): toggle present/absent with a
+  live attendance ring + actual revenue/net/points. **Finish & record** completes the event,
+  writes attendance, and credits participation points + invite bonuses to the ledger
+  (idempotent). Member dashboards update from these writes.
 - [ ] Phase 6 — Polish & ship (PWA, Vercel, domain).
 
 ## Project layout

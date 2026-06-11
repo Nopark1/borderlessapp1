@@ -25,6 +25,7 @@ export function AdminApp({ initialEvents, email }: { initialEvents: Event[]; ema
 
   const openNew = () => { setEditor("new"); };
   const onSaved = () => { setEditor(null); setTab("events"); router.refresh(); };
+  const onCheckin = (id: string) => router.push(`/admin/checkin/${id}`);
 
   const onDuplicate = (id: string) =>
     startTransition(async () => {
@@ -105,7 +106,7 @@ export function AdminApp({ initialEvents, email }: { initialEvents: Event[]; ema
         {editor !== null ? (
           <EventStudio lang={lang} initial={editor === "new" ? null : editor} onClose={() => setEditor(null)} onSaved={onSaved} />
         ) : tab === "events" ? (
-          <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onDuplicate={onDuplicate} onDelete={onDelete} />
+          <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onCheckin={onCheckin} onDuplicate={onDuplicate} onDelete={onDelete} />
         ) : (
           <Placeholder lang={lang} tab={tab} />
         )}

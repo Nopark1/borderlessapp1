@@ -312,6 +312,24 @@ export async function setHeroImage(url: string | null): Promise<SaveResult> {
   }
 }
 
+export async function setSiteLinks(lineUrl: string | null, instagramUrl: string | null): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const { error } = await supabase
+      .from("settings")
+      .upsert({ id: 1, line_url: lineUrl || null, instagram_url: instagramUrl || null, updated_at: new Date().toISOString() });
+    if (error) return { error: error.message };
+    revalidateTag("settings");
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 // ---- rsvps (for the event editor) ----
 export type RsvpMember = { memberId: string; name: string; country: string; attended: boolean };
 

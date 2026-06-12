@@ -179,6 +179,8 @@ export type AdminBundle = {
   members: MemberRow[];
   rewards: Reward[];
   heroImageUrl: string | null;
+  lineUrl: string | null;
+  instagramUrl: string | null;
 };
 
 /** Everything the admin dashboard needs, in one parallel batch (6 queries) and
@@ -191,6 +193,8 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     members: [],
     rewards: seedRewards,
     heroImageUrl: null,
+    lineUrl: null,
+    instagramUrl: null,
   };
   try {
     const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes] = await Promise.all([
@@ -199,7 +203,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
       supabase.from("points_ledger").select("member_id, points"),
       supabase.from("rsvps").select("member_id, attended, events(price, date, title_en)").eq("attended", true),
       supabase.from("rewards").select("id, title_en, title_jp, cost, tag").order("cost", { ascending: true }),
-      supabase.from("settings").select("hero_image_url").eq("id", 1).maybeSingle(),
+      supabase.from("settings").select("*").eq("id", 1).maybeSingle(),
     ]);
 
     // ---- events ----
@@ -303,8 +307,10 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
         }))
       : seedRewards;
     const heroImageUrl = (setRes.data?.hero_image_url as string) || null;
+    const lineUrl = (setRes.data?.line_url as string) || null;
+    const instagramUrl = (setRes.data?.instagram_url as string) || null;
 
-    return { events, overview, members, rewards, heroImageUrl };
+    return { events, overview, members, rewards, heroImageUrl, lineUrl, instagramUrl };
   } catch (e) {
     console.error("[getAdminBundle] failed:", (e as Error).message);
     return empty;

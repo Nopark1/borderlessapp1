@@ -31,7 +31,14 @@ export default async function Home() {
   const [events, settings] = await Promise.all([getPublicEvents(), getCachedSettings()]);
   return (
     <main className="stage">
-      <PublicSite initialEvents={events} signedIn={signedIn} isAdmin={isAdmin} heroImageUrl={settings.heroImageUrl} />
+      <PublicSite
+        initialEvents={events}
+        signedIn={signedIn}
+        isAdmin={isAdmin}
+        heroImageUrl={settings.heroImageUrl}
+        lineUrl={settings.lineUrl}
+        instagramUrl={settings.instagramUrl}
+      />
     </main>
   );
 }

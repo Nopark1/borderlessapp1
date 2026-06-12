@@ -23,11 +23,15 @@ export function PublicSite({
   signedIn = false,
   isAdmin = false,
   heroImageUrl = null,
+  lineUrl = null,
+  instagramUrl = null,
 }: {
   initialEvents: Event[];
   signedIn?: boolean;
   isAdmin?: boolean;
   heroImageUrl?: string | null;
+  lineUrl?: string | null;
+  instagramUrl?: string | null;
 }) {
   const [lang, setLang] = useState<Lang>("en");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
@@ -104,7 +108,7 @@ export function PublicSite({
                 ? "関西、京都で活動中の国際交流団体。言語と文化の壁を越え、新たな仲間と出会いませんか？"
                 : "Kyoto's fastest-growing international circle. Experience new cultures and meet new friends✨️"}
             </p>
-            <div style={{ display: "flex", gap: 10, pointerEvents: "auto" }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", pointerEvents: "auto" }}>
               <Link className="btn btn-primary" href={signedIn ? "/me" : "/login?mode=signup"}>
                 {t("joinFree", lang)}
               </Link>
@@ -115,6 +119,16 @@ export function PublicSite({
               >
                 {t("browse", lang)}
               </button>
+              {lineUrl && (
+                <a className="btn" href={lineUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#06C755", color: "#fff", boxShadow: "0 6px 16px -8px #06C755" }}>
+                  <Icon name="chat" size={16} color="#fff" /> LINE
+                </a>
+              )}
+              {instagramUrl && (
+                <a className="btn" href={instagramUrl} target="_blank" rel="noopener noreferrer" style={{ background: "linear-gradient(45deg, #feda75 0%, #fa7e1e 22%, #d62976 52%, #962fbf 78%, #4f5bd5 100%)", color: "#fff", boxShadow: "0 6px 16px -8px #962fbf" }}>
+                  <Icon name="instagram" size={16} color="#fff" /> Instagram
+                </a>
+              )}
             </div>
           </div>
           <div style={{ position: "absolute", top: 14, right: 16, zIndex: 6, display: "flex", gap: 8 }}>

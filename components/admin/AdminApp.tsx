@@ -24,6 +24,8 @@ export function AdminApp({
   members,
   rewards,
   heroImageUrl,
+  lineUrl,
+  instagramUrl,
   email,
 }: {
   initialEvents: Event[];
@@ -31,6 +33,8 @@ export function AdminApp({
   members: MemberRow[];
   rewards: Reward[];
   heroImageUrl: string | null;
+  lineUrl: string | null;
+  instagramUrl: string | null;
   email: string;
 }) {
   const router = useRouter();
@@ -139,7 +143,7 @@ export function AdminApp({
         ) : tab === "rewards" ? (
           <AdminRewards lang={lang} rewards={rewards} />
         ) : (
-          <AdminSite lang={lang} heroImageUrl={heroImageUrl} />
+          <AdminSite lang={lang} heroImageUrl={heroImageUrl} lineUrl={lineUrl} instagramUrl={instagramUrl} />
         )}
         {pending && (
           <div style={{ position: "fixed", bottom: 18, right: 18, background: "var(--ink)", color: "#f6efe2", padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, boxShadow: "var(--shadow-lg)" }}>

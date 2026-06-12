@@ -6,16 +6,44 @@ import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { PageHead } from "./AdminShared";
 import { createClient } from "@/lib/supabase-browser";
-import { setHeroImage } from "@/app/admin/actions";
+import { setHeroImage, setSiteLinks } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
 
-export function AdminSite({ lang, heroImageUrl }: { lang: Lang; heroImageUrl: string | null }) {
+export function AdminSite({
+  lang,
+  heroImageUrl,
+  lineUrl,
+  instagramUrl,
+}: {
+  lang: Lang;
+  heroImageUrl: string | null;
+  lineUrl: string | null;
+  instagramUrl: string | null;
+}) {
   const router = useRouter();
   const [url, setUrl] = useState<string | null>(heroImageUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // social profile links
+  const [line, setLine] = useState(lineUrl || "");
+  const [insta, setInsta] = useState(instagramUrl || "");
+  const [savingLinks, setSavingLinks] = useState(false);
+  const [linksMsg, setLinksMsg] = useState("");
+  async function saveLinks() {
+    setLinksMsg("");
+    setSavingLinks(true);
+    const res = await setSiteLinks(line.trim() || null, insta.trim() || null);
+    setSavingLinks(false);
+    if (res.error) setLinksMsg(res.error);
+    else {
+      setLinksMsg(lang === "jp" ? "保存しました" : "Saved");
+      router.refresh();
+      setTimeout(() => setLinksMsg(""), 1800);
+    }
+  }
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -45,6 +73,11 @@ export function AdminSite({ lang, heroImageUrl }: { lang: Lang; heroImageUrl: st
     }
     if (fileRef.current) fileRef.current.value = "";
   }
+
+  const fld: React.CSSProperties = {
+    width: "100%", padding: "11px 13px", borderRadius: 10, border: "1.5px solid var(--line)",
+    background: "#fbf6ee", fontSize: 13.5, fontFamily: "var(--font-ui)", color: "var(--ink)", outline: "none", boxSizing: "border-box",
+  };
 
   async function removeImage() {
     setError("");
@@ -103,6 +136,38 @@ export function AdminSite({ lang, heroImageUrl }: { lang: Lang; heroImageUrl: st
         </div>
         <div style={{ fontSize: 11, color: "var(--ink-faint)", marginTop: 10 }}>
           {lang === "jp" ? "横長の写真がおすすめ（例：1600×900）。" : "Use a wide landscape photo (e.g. 1600×900) for best results."}
+        </div>
+      </div>
+
+      {/* social profile links */}
+      <div className="metric" style={{ padding: "20px 22px", maxWidth: 620, marginTop: 16 }}>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+          {lang === "jp" ? "SNSリンク" : "Social links"}
+        </div>
+        <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 14 }}>
+          {lang === "jp"
+            ? "団体のLINE・Instagramのプロフィールリンク。ホームページのトップにボタンとして表示されます。"
+            : "Your org's LINE & Instagram profile links — shown as buttons in the homepage hero."}
+        </div>
+
+        <label style={{ display: "block", marginBottom: 12 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <Icon name="chat" size={14} color="#06C755" /> {lang === "jp" ? "LINE プロフィールのリンク" : "LINE profile link"}
+          </span>
+          <input style={fld} value={line} onChange={(e) => setLine(e.target.value)} placeholder="https://line.me/R/ti/p/@yourid" />
+        </label>
+        <label style={{ display: "block", marginBottom: 14 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <Icon name="instagram" size={14} color="#d62976" /> {lang === "jp" ? "Instagram のリンク" : "Instagram link"}
+          </span>
+          <input style={fld} value={insta} onChange={(e) => setInsta(e.target.value)} placeholder="https://instagram.com/yourhandle" />
+        </label>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button className="btn btn-primary btn-sm" disabled={savingLinks} onClick={saveLinks}>
+            <Icon name="check" size={15} color="#fff" /> {savingLinks ? (lang === "jp" ? "保存中…" : "Saving…") : lang === "jp" ? "保存" : "Save links"}
+          </button>
+          {linksMsg && <span style={{ fontSize: 12.5, fontWeight: 600, color: linksMsg === "Saved" || linksMsg === "保存しました" ? "var(--success)" : "var(--danger)" }}>{linksMsg}</span>}
         </div>
       </div>
     </div>

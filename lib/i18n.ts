@@ -20,7 +20,7 @@ const S: Dict = {
   upcoming: { en: "Upcoming", jp: "今後の予定" },
   past: { en: "Past Events", jp: "過去のイベント" },
   allEvents: { en: "All", jp: "すべて" },
-  heroTitle: { en: "Meet Kyoto.\nTogether.", jp: "京都を、\nみんなで。" },
+  heroTitle: { en: "Meet Kyoto.\nTogether.", jp: "そうだ、\n京都で集まろう。" },
   heroSub: {
     en: "An international circle hosting a new gathering every week — temples, ramen, rooftops and riverbanks. Come as you are.",
     jp: "毎週新しい集まりを開く国際サークル。お寺、ラーメン、ルーフトップ、川辺へ。気軽にどうぞ。",
@@ -140,7 +140,7 @@ const S: Dict = {
   // weekend strip
   thisWeekend: { en: "This weekend", jp: "今週末" },
   comingUp: { en: "Coming up", jp: "近日開催" },
-  soonSub: { en: "Grab a spot before they fill up", jp: "満席になる前に予約を" },
+  soonSub: { en: "Grab a spot before they fill up", jp: "参加枠残りわずか！なくなり次第終了" },
   today: { en: "Today", jp: "今日" },
   tomorrow: { en: "Tomorrow", jp: "明日" },
   going: { en: "going", jp: "参加" },

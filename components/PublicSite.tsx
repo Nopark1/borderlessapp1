@@ -89,19 +89,19 @@ export function PublicSite({
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "nowrap", paddingRight: 74 }}>
               <span className="sticker wobble tilt-l" style={{ fontSize: 12.5, padding: "7px 13px", whiteSpace: "nowrap" }}>
                 <Icon name="sparkle" size={14} color="var(--primary)" fill="var(--primary)" />{" "}
-                {lang === "jp" ? "毎週開催！" : "new every week"}
+                {lang === "jp" ? "月３開催" : "new every week"}
               </span>
               <span
                 className="sticker wobble tilt-r"
                 style={{ color: "var(--primary)", fontSize: 12.5, padding: "7px 13px", whiteSpace: "nowrap", animationDelay: "-1.1s" }}
               >
-                <Icon name="users" size={14} color="var(--primary)" /> 100+ {lang === "jp" ? "仲間" : "friends"}
+                <Icon name="users" size={14} color="var(--primary)" /> 100+ {lang === "jp" ? "のメンバー" : "friends"}
               </span>
             </div>
             <h1 className="pub-hero-title">{t("heroTitle", lang)}</h1>
             <p style={{ color: "rgba(255,255,255,.88)", fontSize: 14, lineHeight: 1.55, margin: "12px 0 18px", maxWidth: 320 }}>
               {lang === "jp"
-                ? "京都で最も成長中の国際サークル。新しい文化に触れ、新しい仲間と出会おう✨️"
+                ? "関西、京都で活動中の国際交流団体。言語と文化の壁を越え、新たな仲間と出会いませんか？"
                 : "Kyoto's fastest-growing international circle. Experience new cultures and meet new friends✨️"}
             </p>
             <div style={{ display: "flex", gap: 10, pointerEvents: "auto" }}>

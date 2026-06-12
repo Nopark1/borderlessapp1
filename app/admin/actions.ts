@@ -46,6 +46,14 @@ export async function saveEvent(
       /* column not present yet — ignore */
     }
   }
+  // LINE group link — best-effort (works before the line_url migration 0006)
+  async function applyLineUrl(eventId: string) {
+    try {
+      await supabase.from("events").update({ line_url: input.lineUrl || null }).eq("id", eventId);
+    } catch {
+      /* column not present yet — ignore */
+    }
+  }
   const known = Math.max(0, Number(input.knownRsvp) || 0);
 
   try {
@@ -57,6 +65,7 @@ export async function saveEvent(
         .eq("id", input.id);
       if (error) return { error: error.message };
       await applyKnown(input.id, known);
+      await applyLineUrl(input.id);
       revalidatePath("/admin");
       revalidatePath("/");
       revalidateTag("events");
@@ -77,11 +86,15 @@ export async function saveEvent(
 
     const { data: inserted, error } = await supabase.from("events").insert(rows).select("id");
     if (error) return { error: error.message };
-    if (known > 0 && inserted) {
-      for (const row of inserted as { id: string }[]) await applyKnown(row.id, known);
+    if (inserted) {
+      for (const row of inserted as { id: string }[]) {
+        if (known > 0) await applyKnown(row.id, known);
+        if (input.lineUrl) await applyLineUrl(row.id);
+      }
     }
     revalidatePath("/admin");
     revalidatePath("/");
+    revalidateTag("events");
     return { ok: true, count: rows.length };
   } catch (e) {
     return { error: (e as Error).message };

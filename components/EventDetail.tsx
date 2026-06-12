@@ -126,6 +126,18 @@ export function EventDetail({
               />
             </div>
 
+            {event.lineUrl && (
+              <a
+                href={event.lineUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-block"
+                style={{ background: "#06C755", color: "#fff", marginBottom: 18, boxShadow: "0 6px 16px -8px #06C755" }}
+              >
+                <Icon name="chat" size={17} color="#fff" /> {lang === "jp" ? "LINEグループに参加" : "Join the LINE group"}
+              </a>
+            )}
+
             {!past && (
               <div className="card detail-rsvp-desktop" style={{ padding: 16, marginBottom: 18 }}>
                 {error && <div style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}

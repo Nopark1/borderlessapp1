@@ -46,6 +46,7 @@ export function EventStudio({
     descJp: initial?.desc.jp || "",
     attended: initial?.attended ?? 0,
     knownRsvp: initial?.knownRsvp ?? 0,
+    lineUrl: initial?.lineUrl || "",
     repeat: "none" as RepeatFreq,
     repeatCount: 4,
   }));
@@ -154,6 +155,7 @@ export function EventStudio({
       descJp: f.descJp,
       attended: isCompletedEdit ? Number(f.attended) || 0 : undefined,
       knownRsvp: Number(f.knownRsvp) || 0,
+      lineUrl: f.lineUrl.trim(),
     };
   }
 
@@ -383,6 +385,17 @@ export function EventStudio({
             <label><span style={lbl}>{t("areaL", lang)} (EN)</span><input style={fld} value={f.areaEn} onChange={(e) => set("areaEn", e.target.value)} onFocus={onF} onBlur={onB} placeholder="Pontocho" /></label>
             <label><span style={lbl}>{t("areaL", lang)} (JP)</span><input style={fld} value={f.areaJp} onChange={(e) => set("areaJp", e.target.value)} onFocus={onF} onBlur={onB} placeholder="先斗町" /></label>
           </div>
+          <label style={{ display: "block", marginTop: 14 }}>
+            <span style={lbl}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <Icon name="chat" size={13} color="#06C755" /> {lang === "jp" ? "LINEグループのリンク（任意）" : "LINE group link (optional)"}
+              </span>
+            </span>
+            <input style={fld} value={f.lineUrl} onChange={(e) => set("lineUrl", e.target.value)} onFocus={onF} onBlur={onB} placeholder="https://line.me/ti/g/..." />
+            <span style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginTop: 5 }}>
+              {lang === "jp" ? "参加者がこのイベントのLINEグループに参加できるリンク。" : "Attendees will get a button to join this event's LINE group."}
+            </span>
+          </label>
         </div>
 
         {/* recurrence (new events only) */}

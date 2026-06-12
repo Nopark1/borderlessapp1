@@ -40,6 +40,7 @@ type EventRow = {
   gallery: number;
   status: EventStatus;
   known_rsvp?: number | null;
+  line_url?: string | null;
 };
 
 /** Map a flat DB row to the app's nested bilingual Event shape. */
@@ -68,6 +69,7 @@ export function fromRow(r: EventRow): Event {
     gallery: r.gallery,
     status: r.status,
     knownRsvp: r.known_rsvp ?? 0,
+    lineUrl: r.line_url ?? "",
   };
 }
 

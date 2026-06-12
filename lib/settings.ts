@@ -9,9 +9,10 @@ export type SiteSettings = {
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
+  discordUrl: string | null;
 };
 
-const EMPTY_SETTINGS: SiteSettings = { heroImageUrl: null, lineUrl: null, instagramUrl: null };
+const EMPTY_SETTINGS: SiteSettings = { heroImageUrl: null, lineUrl: null, instagramUrl: null, discordUrl: null };
 
 /** Cached site settings (hero image) — public, rarely changes. Tagged "settings",
  *  invalidated when an admin updates the hero image. */
@@ -30,6 +31,7 @@ export async function getSettings(supabase: SupabaseClient | null): Promise<Site
       heroImageUrl: (data?.hero_image_url as string) || null,
       lineUrl: (data?.line_url as string) || null,
       instagramUrl: (data?.instagram_url as string) || null,
+      discordUrl: (data?.discord_url as string) || null,
     };
   } catch {
     return EMPTY_SETTINGS;

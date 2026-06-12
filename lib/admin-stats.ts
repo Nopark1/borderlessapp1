@@ -181,6 +181,7 @@ export type AdminBundle = {
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
+  discordUrl: string | null;
 };
 
 /** Everything the admin dashboard needs, in one parallel batch (6 queries) and
@@ -195,6 +196,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     heroImageUrl: null,
     lineUrl: null,
     instagramUrl: null,
+    discordUrl: null,
   };
   try {
     const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes] = await Promise.all([
@@ -309,8 +311,9 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     const heroImageUrl = (setRes.data?.hero_image_url as string) || null;
     const lineUrl = (setRes.data?.line_url as string) || null;
     const instagramUrl = (setRes.data?.instagram_url as string) || null;
+    const discordUrl = (setRes.data?.discord_url as string) || null;
 
-    return { events, overview, members, rewards, heroImageUrl, lineUrl, instagramUrl };
+    return { events, overview, members, rewards, heroImageUrl, lineUrl, instagramUrl, discordUrl };
   } catch (e) {
     console.error("[getAdminBundle] failed:", (e as Error).message);
     return empty;

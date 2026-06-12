@@ -38,6 +38,7 @@ export default async function Home() {
         heroImageUrl={settings.heroImageUrl}
         lineUrl={settings.lineUrl}
         instagramUrl={settings.instagramUrl}
+        discordUrl={settings.discordUrl}
       />
     </main>
   );

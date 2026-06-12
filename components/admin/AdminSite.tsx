@@ -8,6 +8,7 @@ import { PageHead } from "./AdminShared";
 import { createClient } from "@/lib/supabase-browser";
 import { setHeroImage, setSiteLinks } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
+import { DiscordIcon } from "../Icon";
 import type { Lang } from "@/lib/types";
 
 export function AdminSite({
@@ -15,11 +16,13 @@ export function AdminSite({
   heroImageUrl,
   lineUrl,
   instagramUrl,
+  discordUrl,
 }: {
   lang: Lang;
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
+  discordUrl: string | null;
 }) {
   const router = useRouter();
   const [url, setUrl] = useState<string | null>(heroImageUrl);
@@ -30,12 +33,13 @@ export function AdminSite({
   // social profile links
   const [line, setLine] = useState(lineUrl || "");
   const [insta, setInsta] = useState(instagramUrl || "");
+  const [discord, setDiscord] = useState(discordUrl || "");
   const [savingLinks, setSavingLinks] = useState(false);
   const [linksMsg, setLinksMsg] = useState("");
   async function saveLinks() {
     setLinksMsg("");
     setSavingLinks(true);
-    const res = await setSiteLinks(line.trim() || null, insta.trim() || null);
+    const res = await setSiteLinks(line.trim() || null, insta.trim() || null, discord.trim() || null);
     setSavingLinks(false);
     if (res.error) setLinksMsg(res.error);
     else {
@@ -156,11 +160,17 @@ export function AdminSite({
           </span>
           <input style={fld} value={line} onChange={(e) => setLine(e.target.value)} placeholder="https://line.me/R/ti/p/@yourid" />
         </label>
-        <label style={{ display: "block", marginBottom: 14 }}>
+        <label style={{ display: "block", marginBottom: 12 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
             <Icon name="instagram" size={14} color="#d62976" /> {lang === "jp" ? "Instagram のリンク" : "Instagram link"}
           </span>
           <input style={fld} value={insta} onChange={(e) => setInsta(e.target.value)} placeholder="https://instagram.com/yourhandle" />
+        </label>
+        <label style={{ display: "block", marginBottom: 14 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <DiscordIcon size={14} color="#5865F2" /> {lang === "jp" ? "Discord のリンク" : "Discord link"}
+          </span>
+          <input style={fld} value={discord} onChange={(e) => setDiscord(e.target.value)} placeholder="https://discord.gg/yourinvite" />
         </label>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

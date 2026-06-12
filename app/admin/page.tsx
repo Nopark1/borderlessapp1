@@ -34,6 +34,7 @@ export default async function AdminPage() {
         heroImageUrl={bundle.heroImageUrl}
         lineUrl={bundle.lineUrl}
         instagramUrl={bundle.instagramUrl}
+        discordUrl={bundle.discordUrl}
         email={user.email ?? "admin"}
       />
     </main>

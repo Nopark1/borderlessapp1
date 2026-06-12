@@ -7,7 +7,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Cover } from "./Cover";
-import { Icon } from "./Icon";
+import { Icon, DiscordIcon } from "./Icon";
 import { EventCard } from "./EventCard";
 import { WeekendStrip } from "./WeekendStrip";
 import { Reveal } from "./Reveal";
@@ -25,6 +25,7 @@ export function PublicSite({
   heroImageUrl = null,
   lineUrl = null,
   instagramUrl = null,
+  discordUrl = null,
 }: {
   initialEvents: Event[];
   signedIn?: boolean;
@@ -32,6 +33,7 @@ export function PublicSite({
   heroImageUrl?: string | null;
   lineUrl?: string | null;
   instagramUrl?: string | null;
+  discordUrl?: string | null;
 }) {
   const [lang, setLang] = useState<Lang>("en");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
@@ -127,6 +129,11 @@ export function PublicSite({
               {instagramUrl && (
                 <a className="btn" href={instagramUrl} target="_blank" rel="noopener noreferrer" style={{ background: "linear-gradient(45deg, #feda75 0%, #fa7e1e 22%, #d62976 52%, #962fbf 78%, #4f5bd5 100%)", color: "#fff", boxShadow: "0 6px 16px -8px #962fbf" }}>
                   <Icon name="instagram" size={16} color="#fff" /> Instagram
+                </a>
+              )}
+              {discordUrl && (
+                <a className="btn" href={discordUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#5865F2", color: "#fff", boxShadow: "0 6px 16px -8px #5865F2" }}>
+                  <DiscordIcon size={16} color="#fff" /> Discord
                 </a>
               )}
             </div>

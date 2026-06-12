@@ -312,14 +312,18 @@ export async function setHeroImage(url: string | null): Promise<SaveResult> {
   }
 }
 
-export async function setSiteLinks(lineUrl: string | null, instagramUrl: string | null): Promise<SaveResult> {
+export async function setSiteLinks(
+  lineUrl: string | null,
+  instagramUrl: string | null,
+  discordUrl: string | null
+): Promise<SaveResult> {
   const ctx = await adminClient();
   if ("error" in ctx) return { error: ctx.error };
   const { supabase } = ctx;
   try {
     const { error } = await supabase
       .from("settings")
-      .upsert({ id: 1, line_url: lineUrl || null, instagram_url: instagramUrl || null, updated_at: new Date().toISOString() });
+      .upsert({ id: 1, line_url: lineUrl || null, instagram_url: instagramUrl || null, discord_url: discordUrl || null, updated_at: new Date().toISOString() });
     if (error) return { error: error.message };
     revalidateTag("settings");
     revalidatePath("/");

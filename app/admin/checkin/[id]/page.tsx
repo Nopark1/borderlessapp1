@@ -25,29 +25,23 @@ export default async function CheckInPage({ params }: { params: { id: string } }
   if (!ev) redirect("/admin");
   const event = fromRow(ev as Parameters<typeof fromRow>[0]);
 
-  // roster = members who RSVP'd, with their attendance + points balance
-  const { data: rsvps } = await supabase
-    .from("rsvps")
-    .select("member_id, attended, members(name, country)")
-    .eq("event_id", params.id);
+  // roster = members who RSVP'd; allMembers = everyone (for adding walk-ins)
+  const [rsvpRes, memRes, ledRes] = await Promise.all([
+    supabase.from("rsvps").select("member_id, attended, members(name, country)").eq("event_id", params.id),
+    supabase.from("members").select("id, name, country"),
+    supabase.from("points_ledger").select("member_id, points"),
+  ]);
 
-  const rosterRows = (rsvps ?? []) as unknown as Array<{
+  const rosterRows = (rsvpRes.data ?? []) as unknown as Array<{
     member_id: string;
     attended: boolean;
     members: { name: string | null; country: string | null } | null;
   }>;
 
-  // points balance per roster member
-  const ids = rosterRows.map((r) => r.member_id);
+  // points balance per member
   const points: Record<string, number> = {};
-  if (ids.length) {
-    const { data: ledger } = await supabase
-      .from("points_ledger")
-      .select("member_id, points")
-      .in("member_id", ids);
-    for (const row of (ledger ?? []) as { member_id: string; points: number }[]) {
-      points[row.member_id] = (points[row.member_id] || 0) + row.points;
-    }
+  for (const row of (ledRes.data ?? []) as { member_id: string; points: number }[]) {
+    points[row.member_id] = (points[row.member_id] || 0) + row.points;
   }
 
   const roster: RosterMember[] = rosterRows.map((r) => ({
@@ -58,5 +52,12 @@ export default async function CheckInPage({ params }: { params: { id: string } }
     attended: Boolean(r.attended),
   }));
 
-  return <CheckInScreen event={event} roster={roster} />;
+  // members who didn't RSVP — searchable to add as walk-ins
+  const rosterIds = new Set(roster.map((m) => m.id));
+  const addable: RosterMember[] = ((memRes.data ?? []) as { id: string; name: string | null; country: string | null }[])
+    .filter((m) => !rosterIds.has(m.id))
+    .map((m) => ({ id: m.id, name: m.name || "Member", country: m.country || "", points: points[m.id] || 0, attended: false }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return <CheckInScreen event={event} roster={roster} addable={addable} />;
 }

@@ -157,18 +157,26 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
     const per = pointsFor({ price: ev.price as number });
     const evDate = ev.date as string;
 
-    // all RSVPs for this event
+    // existing RSVPs for this event
     const { data: rsvps } = await supabase
       .from("rsvps")
       .select("member_id")
       .eq("event_id", eventId);
-    const rows = (rsvps ?? []) as { member_id: string }[];
+    const existing = (rsvps ?? []).map((r) => (r as { member_id: string }).member_id);
 
-    // 1) update attendance on each rsvp
-    const presentList = rows.filter((r) => present.has(r.member_id)).map((r) => r.member_id);
-    const absentList = rows.filter((r) => !present.has(r.member_id)).map((r) => r.member_id);
+    // present = everyone marked present (incl. walk-ins added at the door);
+    // absent = previously-RSVP'd members not marked present.
+    const presentList = [...present];
+    const absentList = existing.filter((id) => !present.has(id));
+
+    // upsert present rows (creates attendance for walk-ins who didn't RSVP)
     if (presentList.length)
-      await supabase.from("rsvps").update({ attended: true }).eq("event_id", eventId).in("member_id", presentList);
+      await supabase
+        .from("rsvps")
+        .upsert(
+          presentList.map((id) => ({ event_id: eventId, member_id: id, attended: true })),
+          { onConflict: "event_id,member_id" }
+        );
     if (absentList.length)
       await supabase.from("rsvps").update({ attended: false }).eq("event_id", eventId).in("member_id", absentList);
 

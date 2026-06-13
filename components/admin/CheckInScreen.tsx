@@ -22,16 +22,20 @@ export type RosterMember = {
   attended: boolean;
 };
 
-export function CheckInScreen({ event, roster }: { event: Event; roster: RosterMember[] }) {
+export function CheckInScreen({ event, roster, addable = [] }: { event: Event; roster: RosterMember[]; addable?: RosterMember[] }) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [present, setPresent] = useState<Set<string>>(
     () => new Set(roster.filter((m) => m.attended).map((m) => m.id))
   );
+  const [added, setAdded] = useState<RosterMember[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addQ, setAddQ] = useState("");
   const [q, setQ] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
+  const everyone = useMemo(() => [...roster, ...added], [roster, added]);
   const invited = event.invited || roster.length || 0;
   const count = present.size;
   const price = Number(event.price) || 0;
@@ -45,9 +49,17 @@ export function CheckInScreen({ event, roster }: { event: Event; roster: RosterM
   const tierColor: Record<string, string> = { Insider: "var(--primary)", Regular: "var(--gold)", Guest: "var(--ink-faint)" };
 
   const list = useMemo(
-    () => roster.filter((m) => m.name.toLowerCase().includes(q.toLowerCase())),
-    [roster, q]
+    () => everyone.filter((m) => m.name.toLowerCase().includes(q.toLowerCase())),
+    [everyone, q]
   );
+
+  const addCandidates = useMemo(() => {
+    const addedIds = new Set(added.map((m) => m.id));
+    const needle = addQ.trim().toLowerCase();
+    return addable
+      .filter((m) => !addedIds.has(m.id) && (!needle || m.name.toLowerCase().includes(needle)))
+      .slice(0, 8);
+  }, [addable, added, addQ]);
 
   const toggle = (id: string) =>
     setPresent((p) => {
@@ -55,6 +67,12 @@ export function CheckInScreen({ event, roster }: { event: Event; roster: RosterM
       n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
+
+  const addWalkIn = (m: RosterMember) => {
+    setAdded((a) => [...a, m]);
+    setPresent((p) => new Set(p).add(m.id));
+    setAddQ("");
+  };
 
   function finish() {
     setError("");
@@ -136,9 +154,45 @@ export function CheckInScreen({ event, roster }: { event: Event; roster: RosterM
               <Icon name="search" size={14} color="var(--ink-faint)" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchGuest", lang)} style={{ border: 0, background: "transparent", outline: "none", fontSize: 12.5, fontFamily: "var(--font-ui)", width: "100%", color: "var(--ink)" }} />
             </div>
-            <button className="btn btn-sm btn-ghost" onClick={() => setPresent(new Set(roster.map((m) => m.id)))}>{t("markAll", lang)}</button>
+            <button className="btn btn-sm btn-ghost" onClick={() => setAddOpen((o) => !o)}>
+              <Icon name="plus" size={14} color="var(--ink)" /> {lang === "jp" ? "追加" : "Add"}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => setPresent(new Set(everyone.map((m) => m.id)))}>{t("markAll", lang)}</button>
             <button className="btn btn-sm btn-ghost" onClick={() => setPresent(new Set())}>{t("clearAll", lang)}</button>
           </div>
+
+          {addOpen && (
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", background: "#fbf6ee" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 8 }}>
+                {lang === "jp" ? "当日参加した会員を追加" : "Add a member who showed up"}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, background: "#fff", border: "1px solid var(--line)", borderRadius: 9, padding: "7px 11px" }}>
+                <Icon name="search" size={14} color="var(--ink-faint)" />
+                <input autoFocus value={addQ} onChange={(e) => setAddQ(e.target.value)} placeholder={lang === "jp" ? "名前で検索…" : "Search members by name…"} style={{ border: 0, background: "transparent", outline: "none", fontSize: 13, fontFamily: "var(--font-ui)", width: "100%", color: "var(--ink)" }} />
+              </div>
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+                {addQ.trim() && addCandidates.length === 0 && (
+                  <div style={{ fontSize: 12.5, color: "var(--ink-faint)", padding: "4px 2px" }}>{lang === "jp" ? "該当する会員がいません。" : "No matching members."}</div>
+                )}
+                {addCandidates.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => addWalkIn(m)}
+                    style={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: "#fff", border: "1px solid var(--line)" }}
+                  >
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: tierColor[tierFor(m.points).key] || "var(--ink-faint)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 12, flex: "0 0 28px" }}>
+                      {m.name[0]?.toUpperCase() || "?"}
+                    </div>
+                    <span style={{ flex: 1, fontWeight: 700, fontSize: 13 }}>{m.name} <span style={{ marginLeft: 2 }}>{m.country}</span></span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--primary)", fontWeight: 700, fontSize: 12 }}>
+                      <Icon name="plus" size={13} color="var(--primary)" /> {lang === "jp" ? "追加" : "Add"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             {list.length === 0 && (
               <div style={{ padding: "30px 16px", textAlign: "center", color: "var(--ink-faint)", fontSize: 13 }}>
@@ -158,7 +212,12 @@ export function CheckInScreen({ event, roster }: { event: Event; roster: RosterM
                     {m.name[0]?.toUpperCase() || "?"}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name} <span style={{ marginLeft: 2 }}>{m.country}</span></div>
+                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>
+                      {m.name} <span style={{ marginLeft: 2 }}>{m.country}</span>
+                      {added.some((a) => a.id === m.id) && (
+                        <span className="tag" style={{ marginLeft: 7, background: "var(--gold-soft)", color: "var(--gold)" }}>{lang === "jp" ? "当日参加" : "walk-in"}</span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 11.5, color: "var(--ink-faint)", fontWeight: 600 }}>{tier.key} · {m.points} {t("points", lang)}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 700, color: on ? "var(--success)" : "var(--ink-faint)" }}>

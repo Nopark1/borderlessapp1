@@ -233,7 +233,17 @@ const S: Dict = {
   recurHint: { en: "Each repeat becomes its own event — edit or check in separately.", jp: "繰り返しは個別イベントとして作成され、別々に編集・受付できます。" },
 };
 
-const NOW = new Date("2026-06-10T00:00:00");
+// Countdowns are anchored to Kyoto time (JST) so server (UTC) and the visitor's
+// browser agree — and computed per call so "today/tomorrow/in N days" stays live.
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+function jstMidnightOf(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  return Date.UTC(y, (m || 1) - 1, d || 1) - JST_OFFSET_MS;
+}
+function jstToday(): number {
+  const j = new Date(Date.now() + JST_OFFSET_MS);
+  return Date.UTC(j.getUTCFullYear(), j.getUTCMonth(), j.getUTCDate()) - JST_OFFSET_MS;
+}
 
 export function t(key: string, lang: Lang): string {
   return S[key] ? S[key][lang] || S[key].en : key;
@@ -244,12 +254,11 @@ export function val(obj: Bilingual | null | undefined, lang: Lang): string {
 }
 
 export function daysUntil(iso: string): number {
-  const d = new Date(iso + "T00:00:00");
-  return Math.round((d.getTime() - NOW.getTime()) / 86400000);
+  return Math.round((jstMidnightOf(iso) - jstToday()) / 86400000);
 }
 
 export function relDay(iso: string, lang: Lang): string {
-  const n = Math.round((new Date(iso + "T00:00:00").getTime() - NOW.getTime()) / 86400000);
+  const n = daysUntil(iso);
   if (n <= 0) return S.today[lang] || S.today.en;
   if (n === 1) return S.tomorrow[lang] || S.tomorrow.en;
   return lang === "jp" ? `${n}日後` : `in ${n} days`;

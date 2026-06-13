@@ -162,9 +162,9 @@ const S: Dict = {
   location: { en: "Location", jp: "場所" },
   venueEnL: { en: "Venue", jp: "会場" },
   areaL: { en: "Area / neighborhood", jp: "エリア" },
-  pricingCap: { en: "Pricing & capacity", jp: "料金・定員" },
+  pricingCap: { en: "Pricing & goal", jp: "料金・参加目標" },
   priceL: { en: "Entry fee (¥)", jp: "参加費（¥）" },
-  capacityL: { en: "Capacity", jp: "定員" },
+  capacityL: { en: "Participation goal", jp: "参加目標" },
   pointsL: { en: "Points awarded", jp: "付与ポイント" },
   invitedL: { en: "People invited", jp: "招待人数" },
   descL: { en: "Description", jp: "説明" },
@@ -172,8 +172,8 @@ const S: Dict = {
   descJpL: { en: "Write-up (Japanese)", jp: "本文（日本語）" },
   livePreview: { en: "Live preview", jp: "プレビュー" },
   projRevenue: { en: "Projected revenue", jp: "見込売上" },
-  ptsIfFull: { en: "Points if full", jp: "満席時のポイント" },
-  atCapacity: { en: "at capacity", jp: "満席時" },
+  ptsIfFull: { en: "Points at goal", jp: "目標時のポイント" },
+  atCapacity: { en: "at goal", jp: "目標時" },
   untitled: { en: "Your event title", jp: "イベント名を入力" },
 
   // status + editing
@@ -194,10 +194,10 @@ const S: Dict = {
   costHint: { en: "Venue, food, supplies, staff — everything combined", jp: "会場・食事・備品・スタッフなどすべて" },
   breakEven: { en: "Break-even", jp: "損益分岐点" },
   breakEvenAtt: { en: "attendees to break even", jp: "人でトントン" },
-  profitFull: { en: "Profit if full", jp: "満席時の利益" },
+  profitFull: { en: "Profit at goal", jp: "目標時の利益" },
   perHead: { en: "Cost / attendee", jp: "1人あたりコスト" },
-  ofCapacity: { en: "of capacity", jp: "定員のうち" },
-  needMore: { en: "over capacity to break even", jp: "定員超過でようやく" },
+  ofCapacity: { en: "of goal", jp: "目標のうち" },
+  needMore: { en: "over the goal to break even", jp: "目標超過でようやく" },
 
   // actions + check-in
   checkIn: { en: "Check in", jp: "受付" },

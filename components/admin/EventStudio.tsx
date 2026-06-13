@@ -562,7 +562,7 @@ export function EventStudio({
           </div>
           <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, lineHeight: 1.25 }}>
-              {f.invited || 0} {t("invited", lang).toLowerCase()} · {f.capacity || 0} {t("capacityL", lang).toLowerCase()}
+              {f.invited || 0} {t("invited", lang).toLowerCase()} · {f.capacity || 0} {lang === "jp" ? "目標" : "goal"}
             </div>
             <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, lineHeight: 1.3 }}>
               {lang === "jp" ? "参加率は開催後に記録" : "Show-up rate tracked after the event"}

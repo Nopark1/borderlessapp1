@@ -5,7 +5,7 @@ import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { PageHead, StatusPill, EventMenu } from "./AdminShared";
 import { isPast, breakEven, finOf, pointsFor, yen } from "@/lib/formulas";
-import { t, val, fmtDate } from "@/lib/i18n";
+import { t, val, fmtDate, daysUntil } from "@/lib/i18n";
 import type { Event, EventStatus, Lang } from "@/lib/types";
 
 type Filter = "all" | "published" | "draft" | "completed";
@@ -72,8 +72,13 @@ export function AdminEvents({
                   <div style={{ height: 90 }}>
                     <Cover seed={e.cover} h={90} dim={e.status === "draft" ? 0.32 : 0} />
                   </div>
-                  <div style={{ position: "absolute", top: 10, left: 10, display: "flex", gap: 6 }}>
+                  <div style={{ position: "absolute", top: 10, left: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <StatusPill status={e.status as EventStatus} lang={lang} />
+                    {daysUntil(e.date) < 0 && (
+                      <span className="tag" style={{ background: "var(--gold)", color: "#fff" }}>
+                        <Icon name="clock" size={11} color="#fff" /> {lang === "jp" ? "受付が必要" : "Needs check-in"}
+                      </span>
+                    )}
                   </div>
                   <div style={{ position: "absolute", top: 9, right: 9, zIndex: 20 }}>
                     <EventMenu e={e} lang={lang} onTop onEdit={() => onEdit(e)} onCheckin={() => onCheckin(e.id)} onDuplicate={() => onDuplicate(e.id)} onDelete={() => onDelete(e.id)} />

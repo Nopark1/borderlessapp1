@@ -13,7 +13,7 @@ import { WeekendStrip } from "./WeekendStrip";
 import { Reveal } from "./Reveal";
 import { EmptyState } from "./EmptyState";
 import { isPast } from "@/lib/formulas";
-import { t } from "@/lib/i18n";
+import { t, daysUntil } from "@/lib/i18n";
 import type { Event, Lang } from "@/lib/types";
 
 const playful = true; // the public site uses the youthful "playful" vibe
@@ -41,7 +41,7 @@ export function PublicSite({
 
   const { upcoming, past } = useMemo(() => {
     const up = initialEvents
-      .filter((e) => !isPast(e) && e.status !== "draft")
+      .filter((e) => !isPast(e) && e.status !== "draft" && daysUntil(e.date) >= 0)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
     const pa = initialEvents
       .filter((e) => isPast(e))

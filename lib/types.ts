@@ -46,7 +46,9 @@ export type Event = {
   lng: number;
   invited: number;
   rsvp?: number; // current RSVP count (online sign-ups + known)
-  attended?: number | null; // null until checked-in
+  attended?: number | null; // total headcount; null until checked-in
+  paidAttended?: number | null; // paying attendees (non-admin members + guests)
+  guestCount?: number; // anonymous walk-ins (no account)
   status?: EventStatus;
   gallery?: number;
   knownRsvp?: number; // admin-set in-person RSVPs, added to the displayed count

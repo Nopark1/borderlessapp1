@@ -40,13 +40,14 @@ export const breakEven = (e: Pick<Event, "price" | "cost">): number =>
   Number(e.price) > 0 ? Math.ceil((Number(e.cost) || 0) / Number(e.price)) : 0;
 
 // Per-event finance. Revenue is projected at capacity until the event is held.
+// Once held, revenue counts only PAYING attendees (paid_attended) — admins/staff
+// attend free; falls back to total attendance for events recorded before that split.
 export const finOf = (
-  e: Pick<Event, "price" | "capacity" | "cost" | "attended">
+  e: Pick<Event, "price" | "capacity" | "cost" | "attended" | "paidAttended">
 ): { revenue: number; costs: number; net: number; completed: boolean } => {
   const completed = e.attended !== null && e.attended !== undefined;
-  const revenue = completed
-    ? (e.attended as number) * e.price
-    : Number(e.price) * Number(e.capacity);
+  const paying = (e.paidAttended ?? e.attended) ?? 0;
+  const revenue = completed ? paying * e.price : Number(e.price) * Number(e.capacity);
   const costs = Number(e.cost) || 0;
   return { revenue, costs, net: revenue - costs, completed };
 };

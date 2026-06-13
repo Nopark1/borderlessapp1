@@ -41,6 +41,8 @@ type EventRow = {
   status: EventStatus;
   known_rsvp?: number | null;
   line_url?: string | null;
+  paid_attended?: number | null;
+  guest_count?: number | null;
 };
 
 /** Map a flat DB row to the app's nested bilingual Event shape. */
@@ -70,6 +72,8 @@ export function fromRow(r: EventRow): Event {
     status: r.status,
     knownRsvp: r.known_rsvp ?? 0,
     lineUrl: r.line_url ?? "",
+    paidAttended: r.paid_attended ?? null,
+    guestCount: r.guest_count ?? 0,
   };
 }
 

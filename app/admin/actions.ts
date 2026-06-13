@@ -140,11 +140,12 @@ export type CheckInResult = { ok?: true; error?: string; attended?: number; poin
 /** Finish & record check-in: mark attendance, complete the event, and write
  *  participation points + invite bonuses to the ledger. Safe to re-run
  *  (it clears this event's earned-ledger rows first, then rewrites them). */
-export async function finishCheckIn(eventId: string, presentIds: string[]): Promise<CheckInResult> {
+export async function finishCheckIn(eventId: string, presentIds: string[], guestCount = 0): Promise<CheckInResult> {
   const ctx = await adminClient();
   if ("error" in ctx) return { error: ctx.error };
   const { supabase } = ctx;
   const present = new Set(presentIds);
+  const guests = Math.max(0, Number(guestCount) || 0);
 
   try {
     // event (for pricing + date)
@@ -180,12 +181,35 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
     if (absentList.length)
       await supabase.from("rsvps").update({ attended: false }).eq("event_id", eventId).in("member_id", absentList);
 
-    // 2) complete the event
+    // member info for present members: referrers + admin flag (admins attend free)
+    const referrerOf: Record<string, string | null> = {};
+    const adminIds = new Set<string>();
+    if (presentList.length) {
+      const { data: mems } = await supabase
+        .from("members")
+        .select("id, referred_by, is_admin")
+        .in("id", presentList);
+      for (const m of (mems ?? []) as { id: string; referred_by: string | null; is_admin: boolean }[]) {
+        referrerOf[m.id] = m.referred_by;
+        if (m.is_admin) adminIds.add(m.id);
+      }
+    }
+    const adminPresent = presentList.filter((id) => adminIds.has(id)).length;
+    const attended = presentList.length + guests; // total headcount
+    const paid = Math.max(0, presentList.length - adminPresent) + guests; // paying (members minus admins) + guests
+
+    // 2) complete the event (headcount), then record the paying split (best-effort
+    //    so it still works before the attendance-split migration 0009)
     const { error: upErr } = await supabase
       .from("events")
-      .update({ status: "completed", attended: presentList.length })
+      .update({ status: "completed", attended })
       .eq("id", eventId);
     if (upErr) return { error: upErr.message };
+    try {
+      await supabase.from("events").update({ paid_attended: paid, guest_count: guests }).eq("id", eventId);
+    } catch {
+      /* columns not present yet — ignore */
+    }
 
     // 3) rewrite this event's earned-ledger rows (idempotent)
     await supabase
@@ -203,14 +227,6 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
 
     // referral bonuses: credit the referrer based on the friend's attendance count
     if (presentList.length) {
-      const { data: mems } = await supabase
-        .from("members")
-        .select("id, referred_by")
-        .in("id", presentList);
-      const referrerOf: Record<string, string | null> = {};
-      for (const m of (mems ?? []) as { id: string; referred_by: string | null }[]) {
-        referrerOf[m.id] = m.referred_by;
-      }
       const friends = presentList.filter((id) => referrerOf[id]);
       if (friends.length) {
         // count each friend's attendances on or before this event's date (excluding this one)
@@ -240,7 +256,8 @@ export async function finishCheckIn(eventId: string, presentIds: string[]): Prom
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/me");
-    return { ok: true, attended: presentList.length, points: presentList.length * per };
+    revalidateTag("events");
+    return { ok: true, attended, points: presentList.length * per };
   } catch (e) {
     return { error: (e as Error).message };
   }

@@ -20,6 +20,7 @@ export type RosterMember = {
   country: string;
   points: number;
   attended: boolean;
+  isAdmin?: boolean;
 };
 
 export function CheckInScreen({ event, roster, addable = [] }: { event: Event; roster: RosterMember[]; addable?: RosterMember[] }) {
@@ -31,19 +32,24 @@ export function CheckInScreen({ event, roster, addable = [] }: { event: Event; r
   const [added, setAdded] = useState<RosterMember[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [addQ, setAddQ] = useState("");
+  const [guests, setGuests] = useState(event.guestCount || 0); // anonymous walk-ins (no account)
   const [q, setQ] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
   const everyone = useMemo(() => [...roster, ...added], [roster, added]);
+  const adminIds = useMemo(() => new Set(everyone.filter((m) => m.isAdmin).map((m) => m.id)), [everyone]);
   const invited = event.invited || roster.length || 0;
-  const count = present.size;
   const price = Number(event.price) || 0;
   const cost = Number(event.cost) || 0;
-  const revenue = count * price;
+
+  const memberCount = present.size; // member accounts present (incl. admins)
+  const count = memberCount + guests; // total headcount
+  const payingCount = [...present].filter((id) => !adminIds.has(id)).length + guests; // admins free
+  const revenue = payingCount * price;
   const net = revenue - cost;
   const showUp = invited > 0 ? Math.round((count / invited) * 100) : 0;
-  const pts = count * pointsFor(event);
+  const pts = memberCount * pointsFor(event); // members earn participation points; guests don't
   const done = event.attended != null;
 
   const tierColor: Record<string, string> = { Insider: "var(--primary)", Regular: "var(--gold)", Guest: "var(--ink-faint)" };
@@ -77,7 +83,7 @@ export function CheckInScreen({ event, roster, addable = [] }: { event: Event; r
   function finish() {
     setError("");
     startTransition(async () => {
-      const res = await finishCheckIn(event.id, [...present]);
+      const res = await finishCheckIn(event.id, [...present], guests);
       if (res.error) setError(res.error);
       else router.push("/admin");
     });
@@ -155,11 +161,31 @@ export function CheckInScreen({ event, roster, addable = [] }: { event: Event; r
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchGuest", lang)} style={{ border: 0, background: "transparent", outline: "none", fontSize: 12.5, fontFamily: "var(--font-ui)", width: "100%", color: "var(--ink)" }} />
             </div>
             <button className="btn btn-sm btn-ghost" onClick={() => setAddOpen((o) => !o)}>
-              <Icon name="plus" size={14} color="var(--ink)" /> {lang === "jp" ? "追加" : "Add"}
+              <Icon name="plus" size={14} color="var(--ink)" /> {lang === "jp" ? "会員を追加" : "Add"}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => setGuests((g) => g + 1)}>
+              <Icon name="plus" size={14} color="var(--ink)" /> {lang === "jp" ? "ゲスト" : "Add guest"}
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => setPresent(new Set(everyone.map((m) => m.id)))}>{t("markAll", lang)}</button>
             <button className="btn btn-sm btn-ghost" onClick={() => setPresent(new Set())}>{t("clearAll", lang)}</button>
           </div>
+
+          {guests > 0 && (
+            <div style={{ padding: "11px 16px", borderBottom: "1px solid var(--line)", background: "#fbf6ee", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--ink-faint)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 34px" }}>
+                <Icon name="users" size={16} color="#fff" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{guests} {lang === "jp" ? "名のゲスト" : guests === 1 ? "guest" : "guests"}</div>
+                <div style={{ fontSize: 11.5, color: "var(--ink-faint)", fontWeight: 600 }}>{lang === "jp" ? "アカウントなし・参加と売上に計上、ポイントなし" : "no account · counts toward attendance & revenue, no points"}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", border: "1.5px solid var(--line)", borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+                <button onClick={() => setGuests((g) => Math.max(0, g - 1))} style={{ all: "unset", cursor: "pointer", width: 32, height: 32, textAlign: "center", fontWeight: 800, fontSize: 18, color: "var(--ink-soft)" }}>−</button>
+                <span style={{ minWidth: 30, textAlign: "center", fontWeight: 800, fontFamily: "var(--font-display)" }}>{guests}</span>
+                <button onClick={() => setGuests((g) => g + 1)} style={{ all: "unset", cursor: "pointer", width: 32, height: 32, textAlign: "center", fontWeight: 800, fontSize: 18, color: "var(--ink-soft)" }}>+</button>
+              </div>
+            </div>
+          )}
 
           {addOpen && (
             <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", background: "#fbf6ee" }}>
@@ -214,6 +240,9 @@ export function CheckInScreen({ event, roster, addable = [] }: { event: Event; r
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 13.5 }}>
                       {m.name} <span style={{ marginLeft: 2 }}>{m.country}</span>
+                      {m.isAdmin && (
+                        <span className="tag" style={{ marginLeft: 7, background: "var(--surface-2)", color: "var(--ink-soft)" }}>{lang === "jp" ? "スタッフ・無料" : "staff · free"}</span>
+                      )}
                       {added.some((a) => a.id === m.id) && (
                         <span className="tag" style={{ marginLeft: 7, background: "var(--gold-soft)", color: "var(--gold)" }}>{lang === "jp" ? "当日参加" : "walk-in"}</span>
                       )}

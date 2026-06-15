@@ -4,7 +4,7 @@
    Hero + this-weekend strip + events feed, bilingual EN/JP.
    Reads hard-coded seed data; Supabase reads arrive in Phase 2. */
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Cover } from "./Cover";
 import { Icon, DiscordIcon } from "./Icon";
@@ -20,16 +20,12 @@ const playful = true; // the public site uses the youthful "playful" vibe
 
 export function PublicSite({
   initialEvents,
-  signedIn = false,
-  isAdmin = false,
   heroImageUrl = null,
   lineUrl = null,
   instagramUrl = null,
   discordUrl = null,
 }: {
   initialEvents: Event[];
-  signedIn?: boolean;
-  isAdmin?: boolean;
   heroImageUrl?: string | null;
   lineUrl?: string | null;
   instagramUrl?: string | null;
@@ -38,6 +34,27 @@ export function PublicSite({
   const [lang, setLang] = useState<Lang>("en");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const feedRef = useRef<HTMLDivElement>(null);
+
+  // Auth-dependent header buttons are resolved after load via a tiny API probe
+  // so the page itself stays static/CDN-cached and the public bundle stays lean
+  // (no Supabase SDK shipped to logged-out visitors).
+  const [signedIn, setSignedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (active && d) {
+          setSignedIn(Boolean(d.signedIn));
+          setIsAdmin(Boolean(d.isAdmin));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const { upcoming, past } = useMemo(() => {
     const up = initialEvents

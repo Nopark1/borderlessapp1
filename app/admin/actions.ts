@@ -359,6 +359,32 @@ export async function setSiteLinks(
   }
 }
 
+/** Point thresholds for the Regular & Insider ranks (Guest is always 0). */
+export async function setTierThresholds(regularMin: number, insiderMin: number): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+
+  const reg = Math.round(Number(regularMin));
+  const ins = Math.round(Number(insiderMin));
+  if (!Number.isFinite(reg) || reg < 1) return { error: "Regular must be at least 1 point." };
+  if (!Number.isFinite(ins) || ins <= reg) return { error: "Insider must be higher than Regular." };
+
+  try {
+    const { error } = await supabase
+      .from("settings")
+      .upsert({ id: 1, tier_regular_min: reg, tier_insider_min: ins, updated_at: new Date().toISOString() });
+    if (error) return { error: error.message };
+    revalidateTag("settings");
+    revalidatePath("/");
+    revalidatePath("/me");
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 // ---- rsvps (for the event editor) ----
 export type RsvpMember = { memberId: string; name: string; country: string; attended: boolean };
 

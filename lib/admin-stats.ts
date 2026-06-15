@@ -6,7 +6,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Event, Reward } from "./types";
 import { fromRow } from "./events";
-import { rewards as seedRewards } from "./data";
+import { rewards as seedRewards, buildTiers, DEFAULT_TIER_MINS } from "./data";
 import { pointsFor, finOf, tierFor } from "./formulas";
 
 export type MonthPoint = { m: string; members: number; revenue: number; costs: number };
@@ -182,6 +182,8 @@ export type AdminBundle = {
   lineUrl: string | null;
   instagramUrl: string | null;
   discordUrl: string | null;
+  tierRegularMin: number;
+  tierInsiderMin: number;
 };
 
 /** Everything the admin dashboard needs, in one parallel batch (6 queries) and
@@ -197,6 +199,8 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     lineUrl: null,
     instagramUrl: null,
     discordUrl: null,
+    tierRegularMin: DEFAULT_TIER_MINS.regular,
+    tierInsiderMin: DEFAULT_TIER_MINS.insider,
   };
   try {
     const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes] = await Promise.all([
@@ -278,6 +282,11 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
       pointsIssued, pointsRedeemed, avgPerHead, months, past,
     };
 
+    // ---- rank thresholds (editable) ----
+    const tierRegularMin = (setRes.data?.tier_regular_min as number) ?? DEFAULT_TIER_MINS.regular;
+    const tierInsiderMin = (setRes.data?.tier_insider_min as number) ?? DEFAULT_TIER_MINS.insider;
+    const tierList = buildTiers(tierRegularMin, tierInsiderMin);
+
     // ---- members table ----
     const nowMs = Date.now();
     const members: MemberRow[] = memberRows.map((m) => {
@@ -288,7 +297,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
         id: m.id,
         name: m.name || "Member",
         country: m.country || "",
-        tier: tierFor(pts).key,
+        tier: tierFor(pts, tierList).key,
         attended: attCount[m.id] || 0,
         points: pts,
         spend: spend[m.id] || 0,
@@ -313,7 +322,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     const instagramUrl = (setRes.data?.instagram_url as string) || null;
     const discordUrl = (setRes.data?.discord_url as string) || null;
 
-    return { events, overview, members, rewards, heroImageUrl, lineUrl, instagramUrl, discordUrl };
+    return { events, overview, members, rewards, heroImageUrl, lineUrl, instagramUrl, discordUrl, tierRegularMin, tierInsiderMin };
   } catch (e) {
     console.error("[getAdminBundle] failed:", (e as Error).message);
     return empty;

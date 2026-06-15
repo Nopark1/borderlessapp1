@@ -4,15 +4,25 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase } from "./supabase";
+import { DEFAULT_TIER_MINS } from "./data";
 
 export type SiteSettings = {
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
   discordUrl: string | null;
+  tierRegularMin: number;
+  tierInsiderMin: number;
 };
 
-const EMPTY_SETTINGS: SiteSettings = { heroImageUrl: null, lineUrl: null, instagramUrl: null, discordUrl: null };
+const EMPTY_SETTINGS: SiteSettings = {
+  heroImageUrl: null,
+  lineUrl: null,
+  instagramUrl: null,
+  discordUrl: null,
+  tierRegularMin: DEFAULT_TIER_MINS.regular,
+  tierInsiderMin: DEFAULT_TIER_MINS.insider,
+};
 
 /** Cached site settings (hero image) — public, rarely changes. Tagged "settings",
  *  invalidated when an admin updates the hero image. */
@@ -32,6 +42,8 @@ export async function getSettings(supabase: SupabaseClient | null): Promise<Site
       lineUrl: (data?.line_url as string) || null,
       instagramUrl: (data?.instagram_url as string) || null,
       discordUrl: (data?.discord_url as string) || null,
+      tierRegularMin: (data?.tier_regular_min as number) ?? DEFAULT_TIER_MINS.regular,
+      tierInsiderMin: (data?.tier_insider_min as number) ?? DEFAULT_TIER_MINS.insider,
     };
   } catch {
     return EMPTY_SETTINGS;

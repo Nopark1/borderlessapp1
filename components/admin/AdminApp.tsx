@@ -27,6 +27,8 @@ export function AdminApp({
   lineUrl,
   instagramUrl,
   discordUrl,
+  tierRegularMin,
+  tierInsiderMin,
   email,
 }: {
   initialEvents: Event[];
@@ -37,6 +39,8 @@ export function AdminApp({
   lineUrl: string | null;
   instagramUrl: string | null;
   discordUrl: string | null;
+  tierRegularMin: number;
+  tierInsiderMin: number;
   email: string;
 }) {
   const router = useRouter();
@@ -143,7 +147,7 @@ export function AdminApp({
         ) : tab === "members" ? (
           <AdminMembers lang={lang} members={members} />
         ) : tab === "rewards" ? (
-          <AdminRewards lang={lang} rewards={rewards} />
+          <AdminRewards lang={lang} rewards={rewards} tierRegularMin={tierRegularMin} tierInsiderMin={tierInsiderMin} />
         ) : (
           <AdminSite lang={lang} heroImageUrl={heroImageUrl} lineUrl={lineUrl} instagramUrl={instagramUrl} discordUrl={discordUrl} />
         )}

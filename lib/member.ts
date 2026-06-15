@@ -6,7 +6,7 @@
 import "server-only";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Event, Reward, Tier } from "./types";
-import { tiers, rewards as seedRewards } from "./data";
+import { buildTiers, DEFAULT_TIER_MINS, rewards as seedRewards } from "./data";
 import { tierFor, pointsFor, isPast } from "./formulas";
 import { fromRow } from "./events";
 
@@ -52,6 +52,8 @@ export async function getMemberDashboard(
   let history: HistoryRow[] = [];
   let rewards: Reward[] = seedRewards;
   let inviteCode = "";
+  let regularMin: number = DEFAULT_TIER_MINS.regular;
+  let insiderMin: number = DEFAULT_TIER_MINS.insider;
 
   try {
     // --- member profile ---
@@ -114,6 +116,16 @@ export async function getMemberDashboard(
         tag: (r.tag as Reward["tag"]) ?? undefined,
       }));
     }
+
+    // --- rank thresholds (best-effort — columns may not exist pre-migration) ---
+    try {
+      const { data: settings } = await supabase.from("settings").select("*").eq("id", 1).maybeSingle();
+      const s = settings as { tier_regular_min?: number | null; tier_insider_min?: number | null } | null;
+      if (s?.tier_regular_min != null) regularMin = s.tier_regular_min;
+      if (s?.tier_insider_min != null) insiderMin = s.tier_insider_min;
+    } catch {
+      /* ignore */
+    }
   } catch (e) {
     console.error("[getMemberDashboard] read failed, showing defaults:", (e as Error).message);
   }
@@ -130,9 +142,10 @@ export async function getMemberDashboard(
     else break;
   }
 
-  const tier = tierFor(points);
-  const curIdx = tiers.findIndex((t) => t.key === tier.key);
-  const nextTier = tiers[curIdx + 1] ?? null;
+  const tierList = buildTiers(regularMin, insiderMin);
+  const tier = tierFor(points, tierList);
+  const curIdx = tierList.findIndex((t) => t.key === tier.key);
+  const nextTier = tierList[curIdx + 1] ?? null;
   const progress = nextTier
     ? Math.min(100, ((points - tier.min) / (nextTier.min - tier.min)) * 100)
     : 100;

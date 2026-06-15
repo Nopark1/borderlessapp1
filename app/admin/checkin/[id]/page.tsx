@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { CheckInScreen, type RosterMember } from "@/components/admin/CheckInScreen";
 import { createClient } from "@/lib/supabase-server";
 import { fromRow } from "@/lib/events";
+import { buildTiers, DEFAULT_TIER_MINS } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +27,17 @@ export default async function CheckInPage({ params }: { params: { id: string } }
   const event = fromRow(ev as Parameters<typeof fromRow>[0]);
 
   // roster = members who RSVP'd; allMembers = everyone (for adding walk-ins)
-  const [rsvpRes, memRes, ledRes] = await Promise.all([
+  const [rsvpRes, memRes, ledRes, setRes] = await Promise.all([
     supabase.from("rsvps").select("member_id, attended, members(name, country, is_admin)").eq("event_id", params.id),
     supabase.from("members").select("id, name, country, is_admin"),
     supabase.from("points_ledger").select("member_id, points"),
+    supabase.from("settings").select("*").eq("id", 1).maybeSingle(),
   ]);
+
+  const tiers = buildTiers(
+    (setRes.data?.tier_regular_min as number) ?? DEFAULT_TIER_MINS.regular,
+    (setRes.data?.tier_insider_min as number) ?? DEFAULT_TIER_MINS.insider
+  );
 
   const rosterRows = (rsvpRes.data ?? []) as unknown as Array<{
     member_id: string;
@@ -60,5 +67,5 @@ export default async function CheckInPage({ params }: { params: { id: string } }
     .map((m) => ({ id: m.id, name: m.name || "Member", country: m.country || "", points: points[m.id] || 0, attended: false, isAdmin: Boolean(m.is_admin) }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  return <CheckInScreen event={event} roster={roster} addable={addable} />;
+  return <CheckInScreen event={event} roster={roster} addable={addable} tiers={tiers} />;
 }

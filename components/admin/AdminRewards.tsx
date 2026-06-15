@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Icon } from "../Icon";
 import { PageHead } from "./AdminShared";
 import { t } from "@/lib/i18n";
-import { saveReward, deleteReward } from "@/app/admin/actions";
+import { saveReward, deleteReward, setTierThresholds } from "@/app/admin/actions";
+import { buildTiers } from "@/lib/data";
 import type { Lang, Reward } from "@/lib/types";
 
 type Draft = { id: string; titleEn: string; titleJp: string; cost: number; tag: string };
@@ -15,11 +16,45 @@ function toDraft(r: Reward): Draft {
 }
 const blankDraft = (): Draft => ({ id: "", titleEn: "", titleJp: "", cost: 5, tag: "" });
 
-export function AdminRewards({ lang, rewards }: { lang: Lang; rewards: Reward[] }) {
+export function AdminRewards({
+  lang,
+  rewards,
+  tierRegularMin,
+  tierInsiderMin,
+}: {
+  lang: Lang;
+  rewards: Reward[];
+  tierRegularMin: number;
+  tierInsiderMin: number;
+}) {
   const router = useRouter();
   const [drafts, setDrafts] = useState<Draft[]>(() => rewards.map(toDraft));
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState("");
+
+  // ---- rank thresholds ----
+  const [reg, setReg] = useState(tierRegularMin);
+  const [ins, setIns] = useState(tierInsiderMin);
+  const [savingTiers, setSavingTiers] = useState(false);
+  const [tierMsg, setTierMsg] = useState("");
+  const tierDirty = reg !== tierRegularMin || ins !== tierInsiderMin;
+  const tierInvalid = !(reg >= 1) || !(ins > reg);
+  const tierColors: Record<string, string> = { Guest: "var(--ink-faint)", Regular: "var(--gold)", Insider: "var(--primary)" };
+  const ladder = buildTiers(reg, ins);
+
+  const saveTiers = () =>
+    startTransition(async () => {
+      setTierMsg("");
+      setSavingTiers(true);
+      const res = await setTierThresholds(reg, ins);
+      setSavingTiers(false);
+      if (res.error) setTierMsg(res.error);
+      else {
+        setTierMsg(lang === "jp" ? "保存しました" : "Saved");
+        router.refresh();
+        setTimeout(() => setTierMsg(""), 1800);
+      }
+    });
 
   const update = (i: number, patch: Partial<Draft>) =>
     setDrafts((d) => d.map((x, j) => (j === i ? { ...x, ...patch } : x)));
@@ -63,6 +98,60 @@ export function AdminRewards({ lang, rewards }: { lang: Lang; rewards: Reward[] 
       {msg && (
         <div style={{ background: "#f8e8e3", color: "var(--danger)", fontWeight: 600, fontSize: 13, borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>{msg}</div>
       )}
+
+      {/* rank thresholds */}
+      <div className="metric" style={{ padding: "18px 20px", maxWidth: 760, marginBottom: 22 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <Icon name="trophy" size={18} color="var(--gold)" />
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>
+            {lang === "jp" ? "ランクの必要ポイント" : "Rank thresholds"}
+          </div>
+        </div>
+        <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 16 }}>
+          {lang === "jp"
+            ? "各ランクに到達するために必要なポイント数。変更はメンバーに即反映されます。"
+            : "Points a member needs to reach each rank. Changes apply to members instantly."}
+        </div>
+
+        {/* visual ladder */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          {ladder.map((tr) => (
+            <div key={tr.key} style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "#fbf6ee", border: "1px solid var(--line)", borderRadius: 999, padding: "5px 12px 5px 8px" }}>
+              <span style={{ width: 22, height: 22, borderRadius: "50%", background: tierColors[tr.key] || "var(--ink-faint)", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-display)" }}>{tr.key[0]}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700 }}>{lang === "jp" ? tr.jp : tr.key}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-faint)" }}>{tr.min}+ {lang === "jp" ? "pt" : "pts"}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <label style={{ width: 120 }}>
+            <span style={lbl}>{lang === "jp" ? "ゲスト" : "Guest"}</span>
+            <input type="number" style={{ ...fld, background: "#f1e7d8", color: "var(--ink-faint)" }} value={0} disabled />
+          </label>
+          <label style={{ width: 120 }}>
+            <span style={{ ...lbl, color: "var(--gold)" }}>{lang === "jp" ? "レギュラー" : "Regular"}</span>
+            <input type="number" min={1} style={fld} value={reg} onChange={(e) => setReg(Number(e.target.value))} />
+          </label>
+          <label style={{ width: 120 }}>
+            <span style={{ ...lbl, color: "var(--primary)" }}>{lang === "jp" ? "インサイダー" : "Insider"}</span>
+            <input type="number" min={reg + 1} style={fld} value={ins} onChange={(e) => setIns(Number(e.target.value))} />
+          </label>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+            {tierMsg && (
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: tierMsg === "Saved" || tierMsg === "保存しました" ? "var(--success)" : "var(--danger)" }}>{tierMsg}</span>
+            )}
+            <button className="btn btn-primary btn-sm" disabled={savingTiers || !tierDirty || tierInvalid} onClick={saveTiers}>
+              <Icon name="check" size={14} color="#fff" /> {savingTiers ? (lang === "jp" ? "保存中…" : "Saving…") : lang === "jp" ? "保存" : "Save ranks"}
+            </button>
+          </div>
+        </div>
+        {tierInvalid && (
+          <div style={{ fontSize: 11.5, color: "var(--danger)", fontWeight: 600, marginTop: 9 }}>
+            {lang === "jp" ? "レギュラーは1以上、インサイダーはレギュラーより大きく設定してください。" : "Regular must be ≥ 1 and Insider must be greater than Regular."}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14, maxWidth: 760 }}>
         {drafts.length === 0 && (

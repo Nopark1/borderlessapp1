@@ -35,6 +35,8 @@ export default async function AdminPage() {
         lineUrl={bundle.lineUrl}
         instagramUrl={bundle.instagramUrl}
         discordUrl={bundle.discordUrl}
+        tierRegularMin={bundle.tierRegularMin}
+        tierInsiderMin={bundle.tierInsiderMin}
         email={user.email ?? "admin"}
       />
     </main>

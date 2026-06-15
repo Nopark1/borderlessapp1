@@ -273,11 +273,32 @@ export const categories: Record<Category, CategoryMeta> = {
 };
 
 // ---- tiers ----
-export const tiers: Tier[] = [
-  { key: "Guest", min: 0, jp: "ゲスト", color: "#9A8B7D" },
-  { key: "Regular", min: 5, jp: "レギュラー", color: "#B4893C" },
-  { key: "Insider", min: 15, jp: "インサイダー", color: "#8A3233" },
+// Names/colors are fixed; the point thresholds (Regular & Insider) are
+// admin-editable and stored in `settings`. Guest is always 0.
+const TIER_TEMPLATE: Omit<Tier, "min">[] = [
+  { key: "Guest", jp: "ゲスト", color: "#9A8B7D" },
+  { key: "Regular", jp: "レギュラー", color: "#B4893C" },
+  { key: "Insider", jp: "インサイダー", color: "#8A3233" },
 ];
+
+export const DEFAULT_TIER_MINS = { regular: 5, insider: 15 } as const;
+
+/** Build the tier ladder from editable thresholds, falling back to defaults
+ *  and guaranteeing Guest(0) < Regular < Insider. */
+export function buildTiers(regularMin?: number | null, insiderMin?: number | null): Tier[] {
+  const reg =
+    Number.isFinite(regularMin as number) && (regularMin as number) >= 1
+      ? Math.round(regularMin as number)
+      : DEFAULT_TIER_MINS.regular;
+  const ins =
+    Number.isFinite(insiderMin as number) && (insiderMin as number) > reg
+      ? Math.round(insiderMin as number)
+      : Math.max(reg + 1, DEFAULT_TIER_MINS.insider);
+  const mins = [0, reg, ins];
+  return TIER_TEMPLATE.map((t, i) => ({ ...t, min: mins[i] }));
+}
+
+export const tiers: Tier[] = buildTiers();
 
 // ---- rewards ----
 export const rewards: Reward[] = [

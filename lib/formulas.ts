@@ -56,10 +56,11 @@ export const finOf = (
 export const pointsAwarded = (e: Pick<Event, "price">, attendedCount: number): number =>
   attendedCount * pointsFor(e);
 
-// tier = highest tier whose `min` <= member's points balance
-export const tierFor = (points: number): Tier => {
-  let result = tiers[0];
-  for (const t of tiers) {
+// tier = highest tier whose `min` <= member's points balance.
+// Pass a custom ladder (from admin-set thresholds); defaults to the seed tiers.
+export const tierFor = (points: number, tierList: Tier[] = tiers): Tier => {
+  let result = tierList[0];
+  for (const t of tierList) {
     if (t.min <= points) result = t;
   }
   return result;

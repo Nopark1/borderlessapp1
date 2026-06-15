@@ -10,9 +10,10 @@ import { Icon } from "../Icon";
 import { Ring } from "../Ring";
 import { StatusPill } from "./AdminShared";
 import { pointsFor, yen, tierFor } from "@/lib/formulas";
+import { tiers as defaultTiers } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import { finishCheckIn } from "@/app/admin/actions";
-import type { Event, Lang } from "@/lib/types";
+import type { Event, Lang, Tier } from "@/lib/types";
 
 export type RosterMember = {
   id: string;
@@ -23,7 +24,7 @@ export type RosterMember = {
   isAdmin?: boolean;
 };
 
-export function CheckInScreen({ event, roster, addable = [] }: { event: Event; roster: RosterMember[]; addable?: RosterMember[] }) {
+export function CheckInScreen({ event, roster, addable = [], tiers = defaultTiers }: { event: Event; roster: RosterMember[]; addable?: RosterMember[]; tiers?: Tier[] }) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [present, setPresent] = useState<Set<string>>(
@@ -206,7 +207,7 @@ export function CheckInScreen({ event, roster, addable = [] }: { event: Event; r
                     onClick={() => addWalkIn(m)}
                     style={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: "#fff", border: "1px solid var(--line)" }}
                   >
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: tierColor[tierFor(m.points).key] || "var(--ink-faint)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 12, flex: "0 0 28px" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: tierColor[tierFor(m.points, tiers).key] || "var(--ink-faint)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 12, flex: "0 0 28px" }}>
                       {m.name[0]?.toUpperCase() || "?"}
                     </div>
                     <span style={{ flex: 1, fontWeight: 700, fontSize: 13 }}>{m.name} <span style={{ marginLeft: 2 }}>{m.country}</span></span>
@@ -227,7 +228,7 @@ export function CheckInScreen({ event, roster, addable = [] }: { event: Event; r
             )}
             {list.map((m, i) => {
               const on = present.has(m.id);
-              const tier = tierFor(m.points);
+              const tier = tierFor(m.points, tiers);
               return (
                 <div
                   key={m.id}

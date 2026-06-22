@@ -47,6 +47,7 @@ export function EventStudio({
     attended: initial?.attended ?? 0,
     knownRsvp: initial?.knownRsvp ?? 0,
     lineUrl: initial?.lineUrl || "",
+    formUrl: initial?.formUrl || "",
     repeat: "none" as RepeatFreq,
     repeatCount: 4,
   }));
@@ -156,6 +157,7 @@ export function EventStudio({
       attended: isCompletedEdit ? Number(f.attended) || 0 : undefined,
       knownRsvp: Number(f.knownRsvp) || 0,
       lineUrl: f.lineUrl.trim(),
+      formUrl: f.formUrl.trim(),
     };
   }
 
@@ -394,6 +396,17 @@ export function EventStudio({
             <input style={fld} value={f.lineUrl} onChange={(e) => set("lineUrl", e.target.value)} onFocus={onF} onBlur={onB} placeholder="https://line.me/ti/g/..." />
             <span style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginTop: 5 }}>
               {lang === "jp" ? "参加者がこのイベントのLINEグループに参加できるリンク。" : "Attendees will get a button to join this event's LINE group."}
+            </span>
+          </label>
+          <label style={{ display: "block", marginTop: 14 }}>
+            <span style={lbl}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <Icon name="edit" size={13} color="#7248B9" /> {lang === "jp" ? "申込フォームのリンク（任意）" : "Sign-up form link (optional)"}
+              </span>
+            </span>
+            <input style={fld} value={f.formUrl} onChange={(e) => set("formUrl", e.target.value)} onFocus={onF} onBlur={onB} placeholder="https://forms.gle/..." />
+            <span style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginTop: 5 }}>
+              {lang === "jp" ? "外部の申込フォーム（Googleフォームなど）。参加者にボタンが表示されます。" : "An external sign-up form (e.g. Google Forms). Attendees will get a button to open it."}
             </span>
           </label>
         </div>

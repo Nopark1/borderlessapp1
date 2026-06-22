@@ -53,6 +53,7 @@ export type Event = {
   gallery?: number;
   knownRsvp?: number; // admin-set in-person RSVPs, added to the displayed count
   lineUrl?: string; // LINE group chat invite link for this event
+  formUrl?: string; // external sign-up form (e.g. Google Forms) for this event
 };
 
 export type CategoryMeta = { en: string; jp: string; color: string };
@@ -90,6 +91,7 @@ export type EventInput = {
   attended?: number | null; // actual headcount, editable for past events
   knownRsvp?: number; // in-person/known RSVPs to add to the displayed count
   lineUrl?: string; // LINE group chat invite link
+  formUrl?: string; // external sign-up form (e.g. Google Forms)
 };
 
 export type RepeatFreq = "none" | "weekly" | "biweekly" | "monthly";

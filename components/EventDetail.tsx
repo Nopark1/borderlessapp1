@@ -138,6 +138,18 @@ export function EventDetail({
               </a>
             )}
 
+            {event.formUrl && (
+              <a
+                href={event.formUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-block"
+                style={{ background: "#7248B9", color: "#fff", marginBottom: 18, boxShadow: "0 6px 16px -8px #7248B9" }}
+              >
+                <Icon name="edit" size={17} color="#fff" /> {lang === "jp" ? "申込フォームを開く" : "Open the sign-up form"}
+              </a>
+            )}
+
             {!past && (
               <div className="card detail-rsvp-desktop" style={{ padding: 16, marginBottom: 18 }}>
                 {error && <div style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}

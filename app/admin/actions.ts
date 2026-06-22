@@ -54,6 +54,14 @@ export async function saveEvent(
       /* column not present yet — ignore */
     }
   }
+  // Sign-up form link — best-effort (works before the form_url migration 0011)
+  async function applyFormUrl(eventId: string) {
+    try {
+      await supabase.from("events").update({ form_url: input.formUrl || null }).eq("id", eventId);
+    } catch {
+      /* column not present yet — ignore */
+    }
+  }
   const known = Math.max(0, Number(input.knownRsvp) || 0);
 
   try {
@@ -66,6 +74,7 @@ export async function saveEvent(
       if (error) return { error: error.message };
       await applyKnown(input.id, known);
       await applyLineUrl(input.id);
+      await applyFormUrl(input.id);
       revalidatePath("/admin");
       revalidatePath("/");
       revalidateTag("events");
@@ -90,6 +99,7 @@ export async function saveEvent(
       for (const row of inserted as { id: string }[]) {
         if (known > 0) await applyKnown(row.id, known);
         if (input.lineUrl) await applyLineUrl(row.id);
+        if (input.formUrl) await applyFormUrl(row.id);
       }
     }
     revalidatePath("/admin");

@@ -62,6 +62,14 @@ export async function saveEvent(
       /* column not present yet — ignore */
     }
   }
+  // Google Maps link — best-effort (works before the maps_url migration 0012)
+  async function applyMapsUrl(eventId: string) {
+    try {
+      await supabase.from("events").update({ maps_url: input.mapsUrl || null }).eq("id", eventId);
+    } catch {
+      /* column not present yet — ignore */
+    }
+  }
   const known = Math.max(0, Number(input.knownRsvp) || 0);
 
   try {
@@ -75,6 +83,7 @@ export async function saveEvent(
       await applyKnown(input.id, known);
       await applyLineUrl(input.id);
       await applyFormUrl(input.id);
+      await applyMapsUrl(input.id);
       revalidatePath("/admin");
       revalidatePath("/");
       revalidateTag("events");
@@ -100,6 +109,7 @@ export async function saveEvent(
         if (known > 0) await applyKnown(row.id, known);
         if (input.lineUrl) await applyLineUrl(row.id);
         if (input.formUrl) await applyFormUrl(row.id);
+        if (input.mapsUrl) await applyMapsUrl(row.id);
       }
     }
     revalidatePath("/admin");

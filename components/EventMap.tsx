@@ -1,14 +1,38 @@
 /* Real, interactive Google map for an event location (no API key needed).
-   Geocodes from the venue/area text; falls back to coordinates.
+   Prefers a pasted Google Maps link (extracts its coordinates/place);
+   otherwise geocodes from the venue/area text or coordinates.
    Shows the address line + "Open in Maps" and "Get directions" actions. */
 import { Icon } from "./Icon";
 import type { Lang } from "@/lib/types";
+
+/** Pull a map-able query (coords or place name) out of a pasted Google Maps URL.
+ *  Short links (maps.app.goo.gl / goo.gl) can't be resolved without following a
+ *  redirect, so those return nothing and we fall back to the venue text. */
+function queryFromMapsUrl(url?: string): string | null {
+  if (!url) return null;
+  const u = url.trim();
+  // explicit coordinates, in rough order of reliability
+  const at = u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (at) return `${at[1]},${at[2]}`;
+  const bang = u.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if (bang) return `${bang[1]},${bang[2]}`;
+  const llq = u.match(/[?&](?:ll|q|query|destination)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (llq) return `${llq[1]},${llq[2]}`;
+  // a named place: /place/<Name>/
+  const place = u.match(/\/place\/([^/@?]+)/);
+  if (place) return decodeURIComponent(place[1].replace(/\+/g, " "));
+  // a free-text query param
+  const qm = u.match(/[?&](?:q|query|destination)=([^&]+)/);
+  if (qm) return decodeURIComponent(qm[1].replace(/\+/g, " "));
+  return null;
+}
 
 export function EventMap({
   query,
   venueLabel,
   lat,
   lng,
+  mapsUrl,
   lang,
   h = 200,
 }: {
@@ -16,14 +40,19 @@ export function EventMap({
   venueLabel?: string;
   lat?: number;
   lng?: number;
+  mapsUrl?: string;
   lang: Lang;
   h?: number;
 }) {
   const hasCoords = typeof lat === "number" && typeof lng === "number" && !(lat === 0 && lng === 0);
-  const q = (query && query.trim()) || (hasCoords ? `${lat},${lng}` : "Kyoto, Japan");
+  // Prefer the pasted Maps link; fall back to venue text, then coordinates.
+  const fromUrl = queryFromMapsUrl(mapsUrl);
+  const q = fromUrl || (query && query.trim()) || (hasCoords ? `${lat},${lng}` : "Kyoto, Japan");
   const enc = encodeURIComponent(q);
   const embedSrc = `https://maps.google.com/maps?q=${enc}&z=15&output=embed`;
-  const openUrl = `https://www.google.com/maps/search/?api=1&query=${enc}`;
+  // The action buttons use the admin's exact link when provided.
+  const cleanMapsUrl = mapsUrl?.trim();
+  const openUrl = cleanMapsUrl || `https://www.google.com/maps/search/?api=1&query=${enc}`;
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${enc}`;
 
   return (

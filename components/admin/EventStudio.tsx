@@ -48,6 +48,7 @@ export function EventStudio({
     knownRsvp: initial?.knownRsvp ?? 0,
     lineUrl: initial?.lineUrl || "",
     formUrl: initial?.formUrl || "",
+    mapsUrl: initial?.mapsUrl || "",
     repeat: "none" as RepeatFreq,
     repeatCount: 4,
   }));
@@ -158,6 +159,7 @@ export function EventStudio({
       knownRsvp: Number(f.knownRsvp) || 0,
       lineUrl: f.lineUrl.trim(),
       formUrl: f.formUrl.trim(),
+      mapsUrl: f.mapsUrl.trim(),
     };
   }
 
@@ -407,6 +409,17 @@ export function EventStudio({
             <input style={fld} value={f.formUrl} onChange={(e) => set("formUrl", e.target.value)} onFocus={onF} onBlur={onB} placeholder="https://forms.gle/..." />
             <span style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginTop: 5 }}>
               {lang === "jp" ? "外部の申込フォーム（Googleフォームなど）。参加者にボタンが表示されます。" : "An external sign-up form (e.g. Google Forms). Attendees will get a button to open it."}
+            </span>
+          </label>
+          <label style={{ display: "block", marginTop: 14 }}>
+            <span style={lbl}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <Icon name="pin" size={13} color="#EA4335" /> {lang === "jp" ? "Googleマップのリンク（任意）" : "Google Maps link (optional)"}
+              </span>
+            </span>
+            <input style={fld} value={f.mapsUrl} onChange={(e) => set("mapsUrl", e.target.value)} onFocus={onF} onBlur={onB} placeholder="https://maps.app.goo.gl/..." />
+            <span style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginTop: 5 }}>
+              {lang === "jp" ? "設定すると、イベントページの地図とリンクがこの場所になります。" : "When set, the map and links on the event page point to this exact place."}
             </span>
           </label>
         </div>

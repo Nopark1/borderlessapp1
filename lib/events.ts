@@ -42,6 +42,7 @@ type EventRow = {
   known_rsvp?: number | null;
   line_url?: string | null;
   form_url?: string | null;
+  maps_url?: string | null;
   paid_attended?: number | null;
   guest_count?: number | null;
 };
@@ -74,6 +75,7 @@ export function fromRow(r: EventRow): Event {
     knownRsvp: r.known_rsvp ?? 0,
     lineUrl: r.line_url ?? "",
     formUrl: r.form_url ?? "",
+    mapsUrl: r.maps_url ?? "",
     paidAttended: r.paid_attended ?? null,
     guestCount: r.guest_count ?? 0,
   };

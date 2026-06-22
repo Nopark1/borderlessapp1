@@ -1,43 +1,26 @@
 import { notFound } from "next/navigation";
 import { EventDetail } from "@/components/EventDetail";
-import { getEventBySlug } from "@/lib/events";
-import { createClient } from "@/lib/supabase-server";
-import { events as seedEvents } from "@/lib/data";
+import { getCachedEventBySlug, getPublicEvents } from "@/lib/events";
 
-export const dynamic = "force-dynamic";
+// Static / ISR: event pages are public, shareable, and rarely change — serve
+// them as CDN-cached HTML. The viewer's RSVP state is resolved client-side in
+// EventDetail. Admin edits and RSVPs purge this via revalidateTag("events").
+export const revalidate = 60;
+
+/** Pre-render every current event at build for instant first loads; new slugs
+ *  render on demand and are then cached. */
+export async function generateStaticParams() {
+  const events = await getPublicEvents();
+  return events.map((e) => ({ slug: e.slug }));
+}
 
 export default async function EventPage({ params }: { params: { slug: string } }) {
-  const supabase = createClient();
-
-  let event = supabase ? await getEventBySlug(supabase, params.slug) : null;
-  let signedIn = false;
-  let joined = false;
-
-  if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    signedIn = Boolean(user);
-    if (user && event) {
-      const { data: rsvp } = await supabase
-        .from("rsvps")
-        .select("id")
-        .eq("event_id", event.id)
-        .eq("member_id", user.id)
-        .maybeSingle();
-      joined = Boolean(rsvp);
-    }
-  }
-
-  // fallback to seed data when Supabase isn't connected (keeps the page working)
-  if (!event) {
-    event = seedEvents.find((e) => e.slug === params.slug) ?? null;
-  }
+  const event = await getCachedEventBySlug(params.slug);
   if (!event) notFound();
 
   return (
     <main className="stage">
-      <EventDetail event={event} signedIn={signedIn} initialJoined={joined} />
+      <EventDetail event={event} />
     </main>
   );
 }

@@ -2,7 +2,7 @@
 
 /* Public event detail (ported from public.jsx) + live RSVP. */
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Cover } from "./Cover";
@@ -33,21 +33,27 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 const avatarColors = ["#8A3233", "#B4893C", "#4E8FA6", "#5B6B4A", "#C06A3C", "#5B3B6B", "#7A3050"];
 
-export function EventDetail({
-  event,
-  signedIn,
-  initialJoined,
-}: {
-  event: Event;
-  signedIn: boolean;
-  initialJoined: boolean;
-}) {
+export function EventDetail({ event }: { event: Event }) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
-  const [joined, setJoined] = useState(initialJoined);
+  const [joined, setJoined] = useState(false);
   const [count, setCount] = useState(event.rsvp || 0); // displayed RSVP count
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+
+  // The page is statically cached; resolve this viewer's RSVP state after load.
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/event-rsvp?eventId=${encodeURIComponent(event.id)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (active && d) setJoined(Boolean(d.joined));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [event.id]);
 
   const past = isPast(event);
   const spots = event.capacity - count;
@@ -55,10 +61,6 @@ export function EventDetail({
   const avatarN = Math.min(7, Math.max(0, goingCount));
 
   function onRsvp() {
-    if (!signedIn) {
-      router.push(`/login?mode=signup`);
-      return;
-    }
     setError("");
     startTransition(async () => {
       const res = await toggleRsvp(event.id, event.slug);

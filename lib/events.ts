@@ -121,6 +121,33 @@ export async function getEventBySlug(supabase: SupabaseClient, slug: string): Pr
   }
 }
 
+/** Cached public event by slug (published/completed only) — lets the event
+ *  detail page render as static/ISR HTML. Tagged "events", so admin edits and
+ *  RSVP toggles invalidate it instantly via revalidateTag. */
+export const getCachedEventBySlug = (slug: string): Promise<Event | null> =>
+  unstable_cache(
+    async (): Promise<Event | null> => {
+      const sb = getSupabase();
+      if (!sb) return seedEvents.find((e) => e.slug === slug) ?? null;
+      try {
+        const { data, error } = await sb
+          .from("events")
+          .select("*")
+          .eq("slug", slug)
+          .in("status", ["published", "completed"])
+          .maybeSingle();
+        // On a read error (e.g. unreachable), fall back to seed rather than 404.
+        if (error) return seedEvents.find((e) => e.slug === slug) ?? null;
+        if (!data) return null; // genuinely no such event
+        return fromRow(data as EventRow);
+      } catch {
+        return seedEvents.find((e) => e.slug === slug) ?? null;
+      }
+    },
+    ["event-by-slug", slug],
+    { revalidate: 60, tags: ["events"] }
+  )();
+
 /** All events (every status), newest first — for the admin events tab. */
 export async function getAdminEvents(supabase: SupabaseClient): Promise<Event[]> {
   try {

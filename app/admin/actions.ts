@@ -346,10 +346,21 @@ export async function setSiteLinks(
   if ("error" in ctx) return { error: ctx.error };
   const { supabase } = ctx;
   try {
+    // Primary save: the columns that have shipped longest. Done first so the
+    // links always persist even if a newer column isn't migrated yet.
     const { error } = await supabase
       .from("settings")
-      .upsert({ id: 1, line_url: lineUrl || null, instagram_url: instagramUrl || null, discord_url: discordUrl || null, updated_at: new Date().toISOString() });
+      .upsert({ id: 1, line_url: lineUrl || null, instagram_url: instagramUrl || null, updated_at: new Date().toISOString() });
     if (error) return { error: error.message };
+
+    // Best-effort: discord_url may not exist until migration 0008 is applied.
+    // Don't let a missing column fail the whole save — skip it gracefully.
+    const { error: dErr } = await supabase
+      .from("settings")
+      .update({ discord_url: discordUrl || null })
+      .eq("id", 1);
+    if (dErr && !/discord_url/.test(dErr.message)) return { error: dErr.message };
+
     revalidateTag("settings");
     revalidatePath("/");
     revalidatePath("/admin");

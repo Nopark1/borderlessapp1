@@ -20,6 +20,28 @@ async function adminClient() {
 // short random suffix to keep slugs unique
 const rnd = () => Math.random().toString(36).slice(2, 6);
 
+/** Expand a Google Maps "Share" short link (maps.app.goo.gl / goo.gl) into its
+ *  full URL, which contains the real coordinates the map embed needs. The
+ *  browser can't do this (CORS), so it's done here on the server at save time.
+ *  Non-short links and any failure pass the original URL through unchanged. */
+async function resolveMapsLink(url: string): Promise<string> {
+  const u = url.trim();
+  if (!/^https?:\/\/(maps\.app\.goo\.gl|goo\.gl)\//i.test(u)) return u;
+  try {
+    const res = await fetch(u, {
+      redirect: "manual",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; BorderlessBot/1.0)" },
+    });
+    let loc = res.headers.get("location") || "";
+    // unwrap a consent interstitial (…/consent?…&continue=<encoded real url>)
+    const cont = loc.match(/[?&]continue=([^&]+)/);
+    if (cont) loc = decodeURIComponent(cont[1]);
+    return /^https?:\/\/.+\/maps/i.test(loc) ? loc : u;
+  } catch {
+    return u;
+  }
+}
+
 export async function saveEvent(
   input: EventInput,
   status: EventStatus,
@@ -62,10 +84,12 @@ export async function saveEvent(
       /* column not present yet — ignore */
     }
   }
-  // Google Maps link — best-effort (works before the maps_url migration 0012)
+  // Google Maps link — best-effort (works before the maps_url migration 0012).
+  // Short "Share" links are expanded server-side so the embed gets coordinates.
   async function applyMapsUrl(eventId: string) {
     try {
-      await supabase.from("events").update({ maps_url: input.mapsUrl || null }).eq("id", eventId);
+      const resolved = input.mapsUrl ? await resolveMapsLink(input.mapsUrl) : null;
+      await supabase.from("events").update({ maps_url: resolved }).eq("id", eventId);
     } catch {
       /* column not present yet — ignore */
     }

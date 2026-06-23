@@ -14,15 +14,14 @@ export default async function AdminPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // gate on is_admin
-  const { data: member } = await supabase
-    .from("members")
-    .select("is_admin")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!member?.is_admin) redirect("/me");
-
-  const bundle = await getAdminBundle(supabase);
+  // Gate check and dashboard data load run concurrently to save a round-trip.
+  // The bundle is RLS-protected and discarded on redirect, so fetching it for a
+  // would-be non-admin leaks nothing.
+  const [memberRes, bundle] = await Promise.all([
+    supabase.from("members").select("is_admin").eq("id", user.id).maybeSingle(),
+    getAdminBundle(supabase),
+  ]);
+  if (!memberRes.data?.is_admin) redirect("/me");
 
   return (
     <main className="admin-stage">

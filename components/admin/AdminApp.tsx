@@ -2,15 +2,22 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Icon } from "../Icon";
 import { AdminEvents } from "./AdminEvents";
-import { AdminOverview } from "./AdminOverview";
-import { AdminMembers } from "./AdminMembers";
-import { AdminRewards } from "./AdminRewards";
-import { AdminSite } from "./AdminSite";
-import { EventStudio } from "./EventStudio";
 import { duplicateEvent, deleteEvent } from "@/app/admin/actions";
+
+// The landing tab is Events, so everything else is code-split and fetched on
+// demand — this keeps the initial dashboard bundle small and quick to hydrate.
+const tabFallback = (
+  <div className="adm-pad" style={{ padding: "40px 30px", color: "var(--ink-faint)", fontSize: 13, fontWeight: 600 }}>…</div>
+);
+const AdminOverview = dynamic(() => import("./AdminOverview").then((m) => m.AdminOverview), { loading: () => tabFallback });
+const AdminMembers = dynamic(() => import("./AdminMembers").then((m) => m.AdminMembers), { loading: () => tabFallback });
+const AdminRewards = dynamic(() => import("./AdminRewards").then((m) => m.AdminRewards), { loading: () => tabFallback });
+const AdminSite = dynamic(() => import("./AdminSite").then((m) => m.AdminSite), { loading: () => tabFallback });
+const EventStudio = dynamic(() => import("./EventStudio").then((m) => m.EventStudio), { loading: () => tabFallback });
 import { t } from "@/lib/i18n";
 import type { Event, Lang, Reward } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";

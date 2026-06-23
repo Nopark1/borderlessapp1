@@ -26,9 +26,12 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Touch the session so expired tokens get refreshed into the response cookies.
+  // Touch the session so expiring tokens get refreshed into the response
+  // cookies. getSession() refreshes when needed but, unlike getUser(), avoids a
+  // verify round-trip on every request — protected pages still call getUser()
+  // themselves for the real check.
   try {
-    await supabase.auth.getUser();
+    await supabase.auth.getSession();
   } catch {
     /* network/offline — leave cookies as-is */
   }

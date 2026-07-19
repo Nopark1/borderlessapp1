@@ -18,18 +18,23 @@ const AdminMembers = dynamic(() => import("./AdminMembers").then((m) => m.AdminM
 const AdminRewards = dynamic(() => import("./AdminRewards").then((m) => m.AdminRewards), { loading: () => tabFallback });
 const AdminSite = dynamic(() => import("./AdminSite").then((m) => m.AdminSite), { loading: () => tabFallback });
 const EventStudio = dynamic(() => import("./EventStudio").then((m) => m.EventStudio), { loading: () => tabFallback });
+const AdminJournal = dynamic(() => import("./AdminJournal").then((m) => m.AdminJournal), { loading: () => tabFallback });
+const ArticleStudio = dynamic(() => import("./ArticleStudio").then((m) => m.ArticleStudio), { loading: () => tabFallback });
 import { t } from "@/lib/i18n";
-import type { Event, Lang, Reward } from "@/lib/types";
+import type { Event, Lang, Reward, Article, AdminAuthor } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
-type Tab = "overview" | "events" | "members" | "rewards" | "site";
+type Tab = "overview" | "events" | "journal" | "members" | "rewards" | "site";
 type Editor = Event | "new" | null;
+type ArtEditor = Article | "new" | null;
 
 export function AdminApp({
   initialEvents,
   overview,
   members,
   rewards,
+  articles,
+  authors,
   heroImageUrl,
   lineUrl,
   instagramUrl,
@@ -42,6 +47,8 @@ export function AdminApp({
   overview: OverviewData;
   members: MemberRow[];
   rewards: Reward[];
+  articles: Article[];
+  authors: AdminAuthor[];
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
@@ -54,13 +61,16 @@ export function AdminApp({
   const [lang, setLang] = useState<Lang>("en");
   const [tab, setTab] = useState<Tab>("events");
   const [editor, setEditor] = useState<Editor>(null);
+  const [artEditor, setArtEditor] = useState<ArtEditor>(null);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState("");
 
-  const busy = editor !== null;
+  const busy = editor !== null || artEditor !== null;
 
-  const openNew = () => { setEditor("new"); };
+  const openNew = () => { setArtEditor(null); setEditor("new"); };
+  const openNewArticle = () => { setEditor(null); setArtEditor("new"); };
   const onSaved = () => { setEditor(null); setTab("events"); router.refresh(); };
+  const onArticleSaved = () => { setArtEditor(null); setTab("journal"); router.refresh(); };
   const onCheckin = (id: string) => router.push(`/admin/checkin/${id}`);
 
   const onDuplicate = (id: string) =>
@@ -79,6 +89,7 @@ export function AdminApp({
   const nav: { k: Tab; i: string; label: string }[] = [
     { k: "overview", i: "grid", label: t("overview", lang) },
     { k: "events", i: "calendar", label: t("eventsAdm", lang) },
+    { k: "journal", i: "edit", label: t("journalAdm", lang) },
     { k: "members", i: "users", label: t("membersAdm", lang) },
     { k: "rewards", i: "gift", label: t("rewardsT", lang) },
     { k: "site", i: "home", label: lang === "jp" ? "サイト" : "Site" },
@@ -101,17 +112,17 @@ export function AdminApp({
           <div
             key={n.k}
             className={"nav-i" + (tab === n.k && !busy ? " on" : "")}
-            onClick={() => { setEditor(null); setTab(n.k); }}
+            onClick={() => { setEditor(null); setArtEditor(null); setTab(n.k); }}
           >
             <Icon name={n.i} size={17} color={tab === n.k && !busy ? "#fff" : "#c9bcab"} /> {n.label}
           </div>
         ))}
         <button
-          onClick={openNew}
+          onClick={tab === "journal" ? openNewArticle : openNew}
           className="adm-newbtn"
           style={{ all: "unset", cursor: "pointer", marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", borderRadius: 11, background: busy ? "var(--primary)" : "rgba(255,255,255,.08)", color: "#fff", fontSize: 13, fontWeight: 700 }}
         >
-          <Icon name="plus" size={16} color="#fff" /> {t("newEvent", lang)}
+          <Icon name="plus" size={16} color="#fff" /> {tab === "journal" ? t("newArticle", lang) : t("newEvent", lang)}
         </button>
 
         <div className="adm-foot">
@@ -147,8 +158,12 @@ export function AdminApp({
         )}
         {editor !== null ? (
           <EventStudio lang={lang} initial={editor === "new" ? null : editor} onClose={() => setEditor(null)} onSaved={onSaved} />
+        ) : artEditor !== null ? (
+          <ArticleStudio lang={lang} initial={artEditor === "new" ? null : artEditor} authors={authors} onClose={() => setArtEditor(null)} onSaved={onArticleSaved} />
         ) : tab === "events" ? (
           <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onCheckin={onCheckin} onDuplicate={onDuplicate} onDelete={onDelete} />
+        ) : tab === "journal" ? (
+          <AdminJournal lang={lang} articles={articles} onNew={openNewArticle} onEdit={(a) => setArtEditor(a)} />
         ) : tab === "overview" ? (
           <AdminOverview lang={lang} data={overview} />
         ) : tab === "members" ? (

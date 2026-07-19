@@ -3,9 +3,10 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { buildInsertRow, buildUpdateRow } from "@/lib/events";
+import { buildArticleRow } from "@/lib/journal";
 import { seriesDates, slugify } from "@/lib/recurrence";
 import { pointsFor, inviteBonusFor } from "@/lib/formulas";
-import type { EventInput, Recurrence, EventStatus, SaveResult } from "@/lib/types";
+import type { EventInput, Recurrence, EventStatus, SaveResult, ArticleInput } from "@/lib/types";
 
 async function adminClient() {
   const supabase = createClient();
@@ -490,6 +491,51 @@ export async function removeRsvp(eventId: string, memberId: string): Promise<Sav
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/me");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+// ---- journal (blog) ----
+
+/** Create or update an article. Slug is generated from the English title on
+ *  first save; author_name is stored as a snapshot so the public reader never
+ *  needs to read the members table. */
+export async function saveArticle(input: ArticleInput): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const row = buildArticleRow(input);
+    if (input.id) {
+      // don't rewrite the slug on edit (keep shareable URLs stable)
+      const { slug, ...rest } = row;
+      const { error } = await supabase.from("articles").update(rest).eq("id", input.id);
+      if (error) return { error: error.message };
+    } else {
+      const { error } = await supabase.from("articles").insert(row);
+      if (error) return { error: error.message };
+    }
+    revalidateTag("articles");
+    revalidatePath("/admin");
+    revalidatePath("/journal");
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function deleteArticle(id: string): Promise<SaveResult> {
+  const ctx = await adminClient();
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase } = ctx;
+  try {
+    const { error } = await supabase.from("articles").delete().eq("id", id);
+    if (error) return { error: error.message };
+    revalidateTag("articles");
+    revalidatePath("/admin");
+    revalidatePath("/journal");
     return { ok: true };
   } catch (e) {
     return { error: (e as Error).message };

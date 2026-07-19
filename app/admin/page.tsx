@@ -30,6 +30,8 @@ export default async function AdminPage() {
         overview={bundle.overview}
         members={bundle.members}
         rewards={bundle.rewards}
+        articles={bundle.articles}
+        authors={bundle.authors}
         heroImageUrl={bundle.heroImageUrl}
         lineUrl={bundle.lineUrl}
         instagramUrl={bundle.instagramUrl}

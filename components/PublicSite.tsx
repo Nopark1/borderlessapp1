@@ -138,6 +138,13 @@ export function PublicSite({
               >
                 {t("browse", lang)}
               </button>
+              <Link
+                className="btn"
+                href="/journal"
+                style={{ background: "rgba(255,255,255,.16)", color: "#fff", backdropFilter: "blur(4px)", borderColor: "rgba(255,255,255,.35)" }}
+              >
+                <Icon name="edit" size={15} color="#fff" /> {t("journalNav", lang)}
+              </Link>
               {lineUrl && (
                 <a className="btn" href={lineUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#06C755", color: "#fff", boxShadow: "0 6px 16px -8px #06C755" }}>
                   <Icon name="chat" size={16} color="#fff" /> LINE

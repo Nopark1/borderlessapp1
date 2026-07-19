@@ -4,9 +4,10 @@
 
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Event, Reward } from "./types";
+import type { Event, Reward, Article, AdminAuthor } from "./types";
 import { fromRow } from "./events";
-import { rewards as seedRewards, buildTiers, DEFAULT_TIER_MINS } from "./data";
+import { getAdminArticles, getAdminAuthors } from "./journal";
+import { rewards as seedRewards, seedArticles, buildTiers, DEFAULT_TIER_MINS } from "./data";
 import { pointsFor, finOf, tierFor } from "./formulas";
 
 export type MonthPoint = { m: string; members: number; revenue: number; costs: number };
@@ -178,6 +179,8 @@ export type AdminBundle = {
   overview: OverviewData;
   members: MemberRow[];
   rewards: Reward[];
+  articles: Article[];
+  authors: AdminAuthor[];
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
@@ -195,6 +198,8 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     overview: EMPTY_OVERVIEW,
     members: [],
     rewards: seedRewards,
+    articles: seedArticles,
+    authors: [],
     heroImageUrl: null,
     lineUrl: null,
     instagramUrl: null,
@@ -203,13 +208,15 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     tierInsiderMin: DEFAULT_TIER_MINS.insider,
   };
   try {
-    const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes] = await Promise.all([
+    const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes, articles, authors] = await Promise.all([
       supabase.from("events").select("*").order("date", { ascending: false }),
       supabase.from("members").select("id, name, country, joined, is_admin"),
       supabase.from("points_ledger").select("member_id, points"),
       supabase.from("rsvps").select("member_id, attended, events(price, date, title_en)").eq("attended", true),
       supabase.from("rewards").select("id, title_en, title_jp, cost, tag").order("cost", { ascending: true }),
       supabase.from("settings").select("*").eq("id", 1).maybeSingle(),
+      getAdminArticles(supabase),
+      getAdminAuthors(supabase),
     ]);
 
     // ---- events ----
@@ -322,7 +329,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     const instagramUrl = (setRes.data?.instagram_url as string) || null;
     const discordUrl = (setRes.data?.discord_url as string) || null;
 
-    return { events, overview, members, rewards, heroImageUrl, lineUrl, instagramUrl, discordUrl, tierRegularMin, tierInsiderMin };
+    return { events, overview, members, rewards, articles, authors, heroImageUrl, lineUrl, instagramUrl, discordUrl, tierRegularMin, tierInsiderMin };
   } catch (e) {
     console.error("[getAdminBundle] failed:", (e as Error).message);
     return empty;

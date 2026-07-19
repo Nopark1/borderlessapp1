@@ -100,3 +100,45 @@ export type RepeatFreq = "none" | "weekly" | "biweekly" | "monthly";
 export type Recurrence = { freq: RepeatFreq; count: number };
 
 export type SaveResult = { ok?: true; error?: string; count?: number };
+
+/* ---- Journal (blog) ---- */
+export type BlogCategory = "living" | "jobs" | "industry";
+export type BlogCatMeta = { en: string; jp: string; short: Bilingual; color: string; soft: string; emoji: string };
+
+export type Article = {
+  id: string;
+  slug: string;
+  cover: string;
+  category: BlogCategory;
+  authorId: string | null; // an admin member id (may be null for seed/legacy)
+  authorName: string; // snapshot, shown publicly without exposing members
+  authorRole: string; // optional byline role, e.g. "Editor"
+  date: string; // YYYY-MM-DD
+  readMin: number;
+  status: "draft" | "published";
+  title: Bilingual;
+  excerpt: Bilingual;
+  body: Bilingual;
+};
+
+/** What the admin article studio collects. Maps to the articles table on save. */
+export type ArticleInput = {
+  id?: string;
+  slug?: string;
+  cover: string;
+  category: BlogCategory;
+  authorId: string | null;
+  authorName: string;
+  authorRole: string;
+  readMin: number;
+  status: "draft" | "published";
+  titleEn: string;
+  titleJp: string;
+  excerptEn: string;
+  excerptJp: string;
+  bodyEn: string;
+  bodyJp: string;
+};
+
+/** An admin account offered as an author in the studio dropdown. */
+export type AdminAuthor = { id: string; name: string };

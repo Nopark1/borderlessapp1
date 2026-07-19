@@ -12,9 +12,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const article = await getCachedArticleBySlug(params.slug);
-  if (!article) return { title: "Journal — Borderless Kyoto" };
+  if (!article) return { title: "Blog — Borderless Kyoto" };
   return {
-    title: `${article.title.en || article.title.jp} — Borderless Journal`,
+    title: `${article.title.en || article.title.jp} — Borderless Blog`,
     description: article.excerpt.en || article.excerpt.jp || undefined,
   };
 }

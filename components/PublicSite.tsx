@@ -145,22 +145,26 @@ export function PublicSite({
               >
                 <Icon name="edit" size={15} color="#fff" /> {t("journalNav", lang)}
               </Link>
-              {lineUrl && (
-                <a className="btn" href={lineUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#06C755", color: "#fff", boxShadow: "0 6px 16px -8px #06C755" }}>
-                  <Icon name="chat" size={16} color="#fff" /> LINE
-                </a>
-              )}
-              {instagramUrl && (
-                <a className="btn" href={instagramUrl} target="_blank" rel="noopener noreferrer" style={{ background: "linear-gradient(45deg, #feda75 0%, #fa7e1e 22%, #d62976 52%, #962fbf 78%, #4f5bd5 100%)", color: "#fff", boxShadow: "0 6px 16px -8px #962fbf" }}>
-                  <Icon name="instagram" size={16} color="#fff" /> Instagram
-                </a>
-              )}
-              {discordUrl && (
-                <a className="btn" href={discordUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#5865F2", color: "#fff", boxShadow: "0 6px 16px -8px #5865F2" }}>
-                  <DiscordIcon size={16} color="#fff" /> Discord
-                </a>
-              )}
             </div>
+            {(lineUrl || instagramUrl || discordUrl) && (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, pointerEvents: "auto" }}>
+                {lineUrl && (
+                  <a className="btn" href={lineUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#06C755", color: "#fff", boxShadow: "0 6px 16px -8px #06C755" }}>
+                    <Icon name="chat" size={16} color="#fff" /> LINE
+                  </a>
+                )}
+                {instagramUrl && (
+                  <a className="btn" href={instagramUrl} target="_blank" rel="noopener noreferrer" style={{ background: "linear-gradient(45deg, #feda75 0%, #fa7e1e 22%, #d62976 52%, #962fbf 78%, #4f5bd5 100%)", color: "#fff", boxShadow: "0 6px 16px -8px #962fbf" }}>
+                    <Icon name="instagram" size={16} color="#fff" /> Instagram
+                  </a>
+                )}
+                {discordUrl && (
+                  <a className="btn" href={discordUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#5865F2", color: "#fff", boxShadow: "0 6px 16px -8px #5865F2" }}>
+                    <DiscordIcon size={16} color="#fff" /> Discord
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div style={{ position: "absolute", top: 14, right: 16, zIndex: 6, display: "flex", gap: 8 }}>
             {signedIn && isAdmin && (

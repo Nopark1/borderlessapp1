@@ -233,17 +233,17 @@ const S: Dict = {
   recurHint: { en: "Each repeat becomes its own event — edit or check in separately.", jp: "繰り返しは個別イベントとして作成され、別々に編集・受付できます。" },
 
   // ---- journal (blog) ----
-  journalNav: { en: "Journal", jp: "ジャーナル" },
+  journalNav: { en: "Blog", jp: "ブログ" },
   eventsNav: { en: "Events", jp: "イベント" },
-  journalTitle: { en: "Journal", jp: "ジャーナル" },
+  journalTitle: { en: "Blog", jp: "ブログ" },
   journalSub: { en: "Field notes on living, working & building a life in Japan — from the people who did it.", jp: "日本で暮らし、働き、人生を築くための現場ノート。実際に経験した人たちから。" },
   allTopics: { en: "All", jp: "すべて" },
   minRead: { en: "min read", jp: "分で読める" },
-  moreReading: { en: "More from the Journal", jp: "ジャーナルの他の記事" },
-  readOurJournal: { en: "Read our Journal", jp: "ジャーナルを読む" },
+  moreReading: { en: "More from the Blog", jp: "ブログの他の記事" },
+  readOurJournal: { en: "Read our Blog", jp: "ブログを読む" },
   emptyJournal: { en: "No articles yet — check back soon.", jp: "記事はまだありません。またお越しください。" },
   // admin — journal
-  journalAdm: { en: "Journal", jp: "ジャーナル" },
+  journalAdm: { en: "Blog", jp: "ブログ" },
   newArticle: { en: "New article", jp: "新規記事" },
   writePost: { en: "Write a post", jp: "記事を書く" },
   editArticle: { en: "Edit article", jp: "記事を編集" },

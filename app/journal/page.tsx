@@ -6,7 +6,7 @@ import { getPublishedArticles } from "@/lib/journal";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Journal — Borderless Kyoto",
+  title: "Blog — Borderless Kyoto",
   description: "Field notes on living, working & building a life in Japan — from the Borderless circle in Kyoto.",
 };
 

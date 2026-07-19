@@ -105,6 +105,9 @@ export type SaveResult = { ok?: true; error?: string; count?: number };
 export type BlogCategory = "living" | "jobs" | "industry";
 export type BlogCatMeta = { en: string; jp: string; short: Bilingual; color: string; soft: string; emoji: string };
 
+/** A file attached to an article (image, PDF, doc, …). */
+export type Attachment = { url: string; name: string; type: string };
+
 export type Article = {
   id: string;
   slug: string;
@@ -119,6 +122,7 @@ export type Article = {
   title: Bilingual;
   excerpt: Bilingual;
   body: Bilingual;
+  attachments: Attachment[];
 };
 
 /** What the admin article studio collects. Maps to the articles table on save. */
@@ -138,6 +142,7 @@ export type ArticleInput = {
   excerptJp: string;
   bodyEn: string;
   bodyJp: string;
+  attachments: Attachment[];
 };
 
 /** An admin account offered as an author in the studio dropdown. */

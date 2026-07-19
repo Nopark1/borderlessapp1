@@ -5,7 +5,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Article, ArticleInput, AdminAuthor, BlogCategory } from "./types";
+import type { Article, ArticleInput, AdminAuthor, BlogCategory, Attachment } from "./types";
 import { seedArticles } from "./data";
 import { getSupabase } from "./supabase";
 import { slugify } from "./recurrence";
@@ -27,7 +27,15 @@ export type ArticleRow = {
   excerpt_jp: string | null;
   body_en: string | null;
   body_jp: string | null;
+  attachments?: unknown;
 };
+
+function normAttachments(v: unknown): Attachment[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && typeof (x as Record<string, unknown>).url === "string")
+    .map((x) => ({ url: String(x.url), name: String(x.name ?? "file"), type: String(x.type ?? "") }));
+}
 
 export function fromArticleRow(r: ArticleRow): Article {
   return {
@@ -44,11 +52,12 @@ export function fromArticleRow(r: ArticleRow): Article {
     title: { en: r.title_en ?? "", jp: r.title_jp ?? "" },
     excerpt: { en: r.excerpt_en ?? "", jp: r.excerpt_jp ?? "" },
     body: { en: r.body_en ?? "", jp: r.body_jp ?? "" },
+    attachments: normAttachments(r.attachments),
   };
 }
 
-const ARTICLE_COLS =
-  "id, slug, cover, category, author_id, author_name, author_role, date, read_min, status, title_en, title_jp, excerpt_en, excerpt_jp, body_en, body_jp";
+// select * so a not-yet-migrated column (e.g. attachments) never errors the read
+const ARTICLE_COLS = "*";
 
 /** Published articles for the public Journal, newest first. Cached 60s,
  *  tagged "articles" (invalidated when an admin saves/deletes). */

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Cover } from "../Cover";
-import { Icon } from "../Icon";
 import { CatPill, Byline } from "./JournalParts";
+import { BlogHeader } from "./BlogHeader";
 import { blogCats } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import type { Article, BlogCategory, Lang } from "@/lib/types";
@@ -18,17 +18,7 @@ export function JournalList({ articles }: { articles: Article[] }) {
 
   return (
     <div className="bl-root">
-      {/* header */}
-      <header className="bl-topbar">
-        <Link href="/" className="shell-brand" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginRight: "auto", textDecoration: "none" }}>
-          <Icon name="arrowL" size={18} color="var(--ink-soft)" />
-          <span style={{ fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: 13, color: "var(--ink-soft)" }}>{t("eventsNav", lang)}</span>
-        </Link>
-        <div className="lang-toggle">
-          <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button>
-          <button className={lang === "jp" ? "on" : ""} onClick={() => setLang("jp")}>日本</button>
-        </div>
-      </header>
+      <BlogHeader lang={lang} setLang={setLang} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "6px 20px 60px" }}>
         <div style={{ padding: "18px 0 6px" }}>
@@ -50,7 +40,7 @@ export function JournalList({ articles }: { articles: Article[] }) {
         ) : (
           list.map((a, i) => (
             <Link key={a.id} href={`/journal/${a.slug}`} className="tap-card" style={{ display: "block", textDecoration: "none" }}>
-              <article style={{ display: "flex", gap: 16, padding: "22px 0", borderBottom: i < list.length - 1 ? "1px solid var(--line-soft)" : "0", alignItems: "flex-start" }}>
+              <article style={{ display: "flex", gap: 16, padding: "22px 0", borderBottom: i < list.length - 1 ? "1px solid var(--ink)" : "0", alignItems: "flex-start" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <CatPill catKey={a.category} lang={lang} />
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 19, lineHeight: 1.26, color: "var(--ink)", margin: "10px 0 0" }}>{val(a.title, lang)}</div>

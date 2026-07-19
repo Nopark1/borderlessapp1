@@ -508,14 +508,24 @@ export async function saveArticle(input: ArticleInput): Promise<SaveResult> {
   const { supabase } = ctx;
   try {
     const row = buildArticleRow(input);
+    let articleId = input.id;
     if (input.id) {
       // don't rewrite the slug on edit (keep shareable URLs stable)
       const { slug, ...rest } = row;
       const { error } = await supabase.from("articles").update(rest).eq("id", input.id);
       if (error) return { error: error.message };
     } else {
-      const { error } = await supabase.from("articles").insert(row);
+      const { data, error } = await supabase.from("articles").insert(row).select("id").single();
       if (error) return { error: error.message };
+      articleId = (data as { id: string } | null)?.id;
+    }
+    // Attachments — best-effort so saves work before the attachments migration (0014).
+    if (articleId) {
+      try {
+        await supabase.from("articles").update({ attachments: input.attachments ?? [] }).eq("id", articleId);
+      } catch {
+        /* column not present yet — ignore */
+      }
     }
     revalidateTag("articles");
     revalidatePath("/admin");

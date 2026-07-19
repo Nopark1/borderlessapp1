@@ -239,7 +239,7 @@ export function PublicSite({
         {filter === "upcoming" && <WeekendStrip events={upcoming.slice(0, 4)} lang={lang} playful={playful} />}
 
         {/* filter */}
-        <div ref={feedRef} style={{ padding: "20px 18px 8px", scrollMarginTop: 8 }}>
+        <div ref={feedRef} id="events" style={{ padding: "20px 18px 8px", scrollMarginTop: 8 }}>
           <div className="seg" style={{ marginBottom: 18 }}>
             <button className={filter === "upcoming" ? "on" : ""} onClick={() => setFilter("upcoming")}>
               {t("upcoming", lang)}

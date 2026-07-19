@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { CatPill } from "./JournalParts";
+import { BlogHeader } from "./BlogHeader";
 import { blogCats, avatarColor } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import type { Article, Lang } from "@/lib/types";
@@ -13,6 +14,8 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
   const [lang, setLang] = useState<Lang>("en");
   const cat = blogCats[article.category];
   const paras = (val(article.body, lang) || "").split(/\n\n+/).filter(Boolean);
+  const imgs = article.attachments.filter((a) => a.type.startsWith("image/"));
+  const files = article.attachments.filter((a) => !a.type.startsWith("image/"));
 
   function share() {
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -26,22 +29,16 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
 
   return (
     <div className="bl-root">
-      <header className="bl-topbar">
-        <Link href="/journal" className="shell-brand" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginRight: "auto", textDecoration: "none" }}>
-          <Icon name="arrowL" size={18} color="var(--ink-soft)" />
-          <span style={{ fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: 13, color: "var(--ink-soft)" }}>{t("journalNav", lang)}</span>
-        </Link>
-        <div className="lang-toggle">
-          <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button>
-          <button className={lang === "jp" ? "on" : ""} onClick={() => setLang("jp")}>日本</button>
-        </div>
-      </header>
+      <BlogHeader lang={lang} setLang={setLang} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 0 60px" }}>
         {/* cover hero */}
         <div style={{ position: "relative", padding: "0 20px", marginTop: 8 }}>
           <div style={{ borderRadius: "var(--radius)", overflow: "hidden", position: "relative" }}>
             <Cover seed={article.cover} h={260} dim={0.12}>
+              <Link href="/journal" title={t("journalNav", lang)} style={{ position: "absolute", top: 14, left: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, textDecoration: "none" }}>
+                <Icon name="arrowL" size={19} color="var(--ink)" />
+              </Link>
               <button onClick={share} title="Share" style={{ position: "absolute", top: 14, right: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", border: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5 }}>
                 <Icon name="share" size={17} color="var(--ink)" />
               </button>
@@ -72,6 +69,28 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
           {paras.map((p, i) => (
             <p key={i} style={{ fontFamily: "var(--font-ui)", fontSize: 15.5, lineHeight: 1.78, color: "var(--ink)", margin: i ? "16px 0 0" : "18px 0 0" }}>{p}</p>
           ))}
+
+          {/* attachments */}
+          {(imgs.length > 0 || files.length > 0) && (
+            <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
+              {imgs.map((att) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={att.url} src={att.url} alt={att.name} style={{ width: "100%", borderRadius: "var(--radius-sm)", display: "block", border: "1px solid var(--line)" }} />
+              ))}
+              {files.map((att) => (
+                <a key={att.url} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "12px 14px" }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 9, background: "var(--primary-soft)", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 0 40px" }}>
+                    <Icon name="download" size={18} color="var(--primary)" />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: 14, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{att.name}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--ink-faint)", fontWeight: 600 }}>{att.name.includes(".") ? att.name.split(".").pop()!.toUpperCase() : (att.type || "file")}</span>
+                  </span>
+                  <Icon name="arrowR" size={16} color="var(--ink-faint)" />
+                </a>
+              ))}
+            </div>
+          )}
 
           {/* more reading */}
           {more.length > 0 && (

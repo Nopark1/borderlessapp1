@@ -327,7 +327,7 @@ export function avatarColor(key: string): string {
 }
 
 // ---- journal seed articles (fallback until Supabase is connected) ----
-export const seedArticles: Article[] = [
+export const seedArticles: Article[] = ([
   {
     id: "b1", slug: "japanese-resume", cover: "lantern", category: "jobs",
     authorId: null, authorName: "Aoi Tanaka", authorRole: "Community Lead",
@@ -378,4 +378,4 @@ export const seedArticles: Article[] = [
       en: "The single biggest hurdle to renting in Japan as a foreigner is the guarantor (保証人) — and the good news is you rarely need a human one anymore.\n\nMost landlords now accept a guarantor company: you pay a fee and they stand behind your lease. Budget also for key money (礼金) and a refundable deposit (敷金).\n\nWork with a foreigner-friendly agency — several in Kyoto advertise English support. Bring your residence card, proof of income, and a Japanese phone number.",
       jp: "外国人が日本で部屋を借りる最大のハードルは保証人です。良い知らせは、もう人間の保証人はほとんど必要ないこと。\n\n今では多くの大家が保証会社を受け入れます。手数料を払えば契約を保証してくれます。さらに礼金と敷金も予算に入れましょう。\n\n外国人に優しい不動産会社を利用しましょう。在留カード、収入の証明、日本の電話番号を持参すれば、評判よりずっとスムーズに進みます。" },
   },
-];
+] as Omit<Article, "attachments">[]).map((a) => ({ ...a, attachments: [] as Article["attachments"] }));

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { CatPill, Byline } from "../journal/JournalParts";
 import { covers, blogCats } from "@/lib/data";
+import { createClient } from "@/lib/supabase-browser";
 import { saveArticle } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
-import type { Article, ArticleInput, AdminAuthor, BlogCategory, Lang } from "@/lib/types";
+import type { Article, ArticleInput, AdminAuthor, Attachment, BlogCategory, Lang } from "@/lib/types";
 
 const CAT_KEYS = Object.keys(blogCats) as BlogCategory[];
 const COVER_KEYS = Object.keys(covers);
@@ -43,6 +44,32 @@ export function ArticleStudio({
   const [error, setError] = useState("");
   const set = (k: string, v: unknown) => setF((s) => ({ ...s, [k]: v }));
 
+  // attachments (uploaded to the public "images" bucket)
+  const [attachments, setAttachments] = useState<Attachment[]>(initial?.attachments || []);
+  const [uploading, setUploading] = useState(false);
+  const [upErr, setUpErr] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const supabase = createClient();
+    if (!supabase) { setUpErr(lang === "jp" ? "Supabase が未接続です。" : "Supabase isn't connected."); return; }
+    setUpErr("");
+    setUploading(true);
+    for (const file of files) {
+      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+      const path = `journal/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const up = await supabase.storage.from("images").upload(path, file, { upsert: false, cacheControl: "3600" });
+      if (up.error) { setUpErr(up.error.message); continue; }
+      const url = supabase.storage.from("images").getPublicUrl(path).data.publicUrl;
+      setAttachments((a) => [...a, { url, name: file.name, type: file.type || ext }]);
+    }
+    setUploading(false);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+  const removeAttachment = (url: string) => setAttachments((a) => a.filter((x) => x.url !== url));
+
   const isEn = clang === "en";
   const suf = isEn ? "En" : "Jp";
   const hasEn = !!(f.titleEn && f.bodyEn);
@@ -76,6 +103,7 @@ export function ArticleStudio({
     titleEn: f.titleEn, titleJp: f.titleJp,
     excerptEn: f.excEn, excerptJp: f.excJp,
     bodyEn: f.bodyEn, bodyJp: f.bodyJp,
+    attachments,
   });
 
   const save = (status: "draft" | "published") =>
@@ -195,6 +223,38 @@ export function ArticleStudio({
             <span style={lbl}>{t("roleField", lang)}</span>
             <input style={fld} value={f.authorRole} onChange={(e) => set("authorRole", e.target.value)} placeholder={lang === "jp" ? "例：編集" : "e.g. Editor"} />
           </label>
+        </div>
+
+        {/* attachments */}
+        <div style={sec}>
+          <div style={secTitle}><Icon name="download" size={16} color="var(--primary)" /> {t("attachmentsField", lang)}</div>
+          <div style={{ fontSize: 11.5, color: "var(--ink-faint)", fontWeight: 600, marginBottom: 12 }}>{t("attachHint", lang)}</div>
+          <input ref={fileRef} type="file" multiple onChange={onFiles} style={{ display: "none" }} />
+          <button className="btn btn-ghost btn-sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+            <Icon name="plus" size={14} color="var(--ink)" /> {uploading ? t("uploadingFiles", lang) : t("addFiles", lang)}
+          </button>
+          {upErr && <div style={{ color: "var(--danger)", fontSize: 12, fontWeight: 600, marginTop: 8 }}>{upErr}</div>}
+          {attachments.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+              {attachments.map((att) => {
+                const isImg = att.type.startsWith("image/");
+                return (
+                  <div key={att.url} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fbf6ee", border: "1px solid var(--line)", borderRadius: 10, padding: "8px 10px" }}>
+                    {isImg ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={att.url} alt="" style={{ width: 40, height: 40, borderRadius: 7, objectFit: "cover", flex: "0 0 40px" }} />
+                    ) : (
+                      <span style={{ width: 40, height: 40, borderRadius: 7, background: "var(--primary-soft)", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 0 40px" }}>
+                        <Icon name="download" size={16} color="var(--primary)" />
+                      </span>
+                    )}
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{att.name}</span>
+                    <button onClick={() => removeAttachment(att.url)} style={{ all: "unset", cursor: "pointer", padding: 6 }} title={lang === "jp" ? "削除" : "Remove"}><Icon name="trash" size={15} color="var(--danger)" /></button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

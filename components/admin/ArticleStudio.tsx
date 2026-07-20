@@ -70,6 +70,27 @@ export function ArticleStudio({
   }
   const removeAttachment = (url: string) => setAttachments((a) => a.filter((x) => x.url !== url));
 
+  // custom cover image upload
+  const coverFileRef = useRef<HTMLInputElement>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [coverErr, setCoverErr] = useState("");
+  const coverIsUpload = f.cover.startsWith("http") || f.cover.startsWith("/");
+  async function onCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const supabase = createClient();
+    if (!supabase) { setCoverErr(lang === "jp" ? "Supabase が未接続です。" : "Supabase isn't connected."); return; }
+    setCoverErr("");
+    setCoverBusy(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `journal/cover-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const up = await supabase.storage.from("images").upload(path, file, { upsert: false, cacheControl: "3600" });
+    setCoverBusy(false);
+    if (up.error) { setCoverErr(up.error.message); return; }
+    set("cover", supabase.storage.from("images").getPublicUrl(path).data.publicUrl);
+    if (coverFileRef.current) coverFileRef.current.value = "";
+  }
+
   const isEn = clang === "en";
   const suf = isEn ? "En" : "Jp";
   const hasEn = !!(f.titleEn && f.bodyEn);
@@ -181,13 +202,35 @@ export function ArticleStudio({
         <div style={sec}>
           <div style={secTitle}><Icon name="sparkle" size={16} color="var(--primary)" /> {lang === "jp" ? "設定" : "Details"}</div>
           <span style={lbl}>{t("coverField", lang)}</span>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: coverErr ? 6 : 16 }}>
+            {coverIsUpload && (
+              <div title={lang === "jp" ? "アップロード画像" : "Uploaded image"} style={{ width: 62, height: 40, borderRadius: 9, overflow: "hidden", boxShadow: "0 0 0 2.5px var(--primary)" }}>
+                <Cover seed={f.cover} h={40} />
+              </div>
+            )}
             {COVER_KEYS.map((k) => (
               <button key={k} onClick={() => set("cover", k)} style={{ all: "unset", cursor: "pointer", width: 62, height: 40, borderRadius: 9, overflow: "hidden", boxShadow: f.cover === k ? "0 0 0 2.5px var(--primary)" : "0 0 0 1.5px var(--line)" }}>
                 <Cover seed={k} h={40} />
               </button>
             ))}
+            <input ref={coverFileRef} type="file" accept="image/*" onChange={onCoverFile} style={{ display: "none" }} />
+            <button
+              onClick={() => coverFileRef.current?.click()}
+              disabled={coverBusy}
+              title={lang === "jp" ? "カバーをアップロード" : "Upload cover"}
+              style={{ all: "unset", cursor: "pointer", width: 62, height: 40, borderRadius: 9, border: "1.5px dashed var(--line)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, color: "var(--ink-soft)", background: "#fbf6ee" }}
+            >
+              {coverBusy ? (
+                <span style={{ fontSize: 9.5, fontWeight: 700 }}>{lang === "jp" ? "中…" : "…"}</span>
+              ) : (
+                <>
+                  <Icon name="download" size={14} color="var(--ink-soft)" />
+                  <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: ".03em", textTransform: "uppercase" }}>{lang === "jp" ? "画像" : "Upload"}</span>
+                </>
+              )}
+            </button>
           </div>
+          {coverErr && <div style={{ color: "var(--danger)", fontSize: 11.5, fontWeight: 600, marginBottom: 12 }}>{coverErr}</div>}
           <span style={lbl}>{t("topicField", lang)}</span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
             {CAT_KEYS.map((k) => {

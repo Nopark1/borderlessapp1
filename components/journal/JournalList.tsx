@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Cover } from "../Cover";
 import { CatPill, Byline } from "./JournalParts";
 import { BlogHeader } from "./BlogHeader";
 import { blogCats } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
+import { trackEvent } from "@/lib/track";
 import type { Article, BlogCategory, Lang } from "@/lib/types";
 
 const CAT_KEYS = Object.keys(blogCats) as BlogCategory[];
@@ -15,6 +16,14 @@ export function JournalList({ articles }: { articles: Article[] }) {
   const [lang, setLang] = useState<Lang>("en");
   const [cat, setCat] = useState<"all" | BlogCategory>("all");
   const list = cat === "all" ? articles : articles.filter((a) => a.category === cat);
+
+  // one impression per article per list visit (the server drops admin traffic)
+  const logged = useRef(false);
+  useEffect(() => {
+    if (logged.current) return;
+    logged.current = true;
+    for (const a of articles) trackEvent(a.slug, "impression");
+  }, [articles]);
 
   return (
     <div className="bl-root">

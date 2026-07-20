@@ -147,3 +147,12 @@ export type ArticleInput = {
 
 /** An admin account offered as an author in the studio dropdown. */
 export type AdminAuthor = { id: string; name: string };
+
+/** Aggregated per-article analytics (non-admin traffic only). */
+export type ArticleStat = {
+  views: number;
+  impressions: number;
+  ctr: number; // views / impressions (0–1+)
+  avgMs: number; // average time on page, milliseconds
+  readers: number; // distinct anonymous sessions that viewed
+};

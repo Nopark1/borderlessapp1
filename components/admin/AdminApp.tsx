@@ -21,7 +21,7 @@ const EventStudio = dynamic(() => import("./EventStudio").then((m) => m.EventStu
 const AdminJournal = dynamic(() => import("./AdminJournal").then((m) => m.AdminJournal), { loading: () => tabFallback });
 const ArticleStudio = dynamic(() => import("./ArticleStudio").then((m) => m.ArticleStudio), { loading: () => tabFallback });
 import { t } from "@/lib/i18n";
-import type { Event, Lang, Reward, Article, AdminAuthor } from "@/lib/types";
+import type { Event, Lang, Reward, Article, AdminAuthor, ArticleStat } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
 type Tab = "overview" | "events" | "journal" | "members" | "rewards" | "site";
@@ -35,6 +35,7 @@ export function AdminApp({
   rewards,
   articles,
   authors,
+  articleStats,
   heroImageUrl,
   lineUrl,
   instagramUrl,
@@ -49,6 +50,7 @@ export function AdminApp({
   rewards: Reward[];
   articles: Article[];
   authors: AdminAuthor[];
+  articleStats: Record<string, ArticleStat>;
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
@@ -159,11 +161,11 @@ export function AdminApp({
         {editor !== null ? (
           <EventStudio lang={lang} initial={editor === "new" ? null : editor} onClose={() => setEditor(null)} onSaved={onSaved} />
         ) : artEditor !== null ? (
-          <ArticleStudio lang={lang} initial={artEditor === "new" ? null : artEditor} authors={authors} onClose={() => setArtEditor(null)} onSaved={onArticleSaved} />
+          <ArticleStudio lang={lang} initial={artEditor === "new" ? null : artEditor} authors={authors} stat={artEditor !== "new" ? articleStats[artEditor.slug] : undefined} onClose={() => setArtEditor(null)} onSaved={onArticleSaved} />
         ) : tab === "events" ? (
           <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onCheckin={onCheckin} onDuplicate={onDuplicate} onDelete={onDelete} />
         ) : tab === "journal" ? (
-          <AdminJournal lang={lang} articles={articles} onNew={openNewArticle} onEdit={(a) => setArtEditor(a)} />
+          <AdminJournal lang={lang} articles={articles} articleStats={articleStats} onNew={openNewArticle} onEdit={(a) => setArtEditor(a)} />
         ) : tab === "overview" ? (
           <AdminOverview lang={lang} data={overview} />
         ) : tab === "members" ? (

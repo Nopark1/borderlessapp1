@@ -5,7 +5,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Article, ArticleInput, AdminAuthor, BlogCategory, Attachment } from "./types";
+import type { Article, ArticleInput, AdminAuthor, ArticleStat, BlogCategory, Attachment } from "./types";
 import { seedArticles } from "./data";
 import { getSupabase } from "./supabase";
 import { slugify } from "./recurrence";
@@ -129,6 +129,37 @@ export async function getAdminAuthors(supabase: SupabaseClient): Promise<AdminAu
       .sort((a, b) => a.name.localeCompare(b.name));
   } catch {
     return [];
+  }
+}
+
+/** Aggregated analytics per article slug (non-admin events only). Best-effort:
+ *  returns {} if the events table doesn't exist yet. */
+export async function getArticleStats(supabase: SupabaseClient): Promise<Record<string, ArticleStat>> {
+  try {
+    const { data } = await supabase.from("article_events").select("slug, type, ms, session");
+    const rows = (data ?? []) as { slug: string; type: string; ms: number | null; session: string | null }[];
+    const acc: Record<string, { views: number; impressions: number; dwellSum: number; dwellN: number; sessions: Set<string> }> = {};
+    for (const r of rows) {
+      let a = acc[r.slug];
+      if (!a) { a = { views: 0, impressions: 0, dwellSum: 0, dwellN: 0, sessions: new Set() }; acc[r.slug] = a; }
+      if (r.type === "view") { a.views++; if (r.session) a.sessions.add(r.session); }
+      else if (r.type === "impression") a.impressions++;
+      else if (r.type === "dwell" && r.ms) { a.dwellSum += r.ms; a.dwellN++; }
+    }
+    const out: Record<string, ArticleStat> = {};
+    for (const slug of Object.keys(acc)) {
+      const a = acc[slug];
+      out[slug] = {
+        views: a.views,
+        impressions: a.impressions,
+        ctr: a.impressions ? a.views / a.impressions : 0,
+        avgMs: a.dwellN ? Math.round(a.dwellSum / a.dwellN) : 0,
+        readers: a.sessions.size,
+      };
+    }
+    return out;
+  } catch {
+    return {};
   }
 }
 

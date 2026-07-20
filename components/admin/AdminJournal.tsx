@@ -7,17 +7,19 @@ import { Icon } from "../Icon";
 import { PageHead } from "./AdminShared";
 import { CatPill, Byline } from "../journal/JournalParts";
 import { deleteArticle } from "@/app/admin/actions";
-import { t, val, fmtDate } from "@/lib/i18n";
-import type { Article, Lang } from "@/lib/types";
+import { t, val, fmtDate, fmtDuration } from "@/lib/i18n";
+import type { Article, ArticleStat, Lang } from "@/lib/types";
 
 export function AdminJournal({
   lang,
   articles,
+  articleStats,
   onNew,
   onEdit,
 }: {
   lang: Lang;
   articles: Article[];
+  articleStats: Record<string, ArticleStat>;
   onNew: () => void;
   onEdit: (a: Article) => void;
 }) {
@@ -85,7 +87,19 @@ export function AdminJournal({
                   <td style={td}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ flex: "0 0 52px", width: 52 }}><Cover seed={a.cover} h={38} radius={8} /></div>
-                      <div style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, lineHeight: 1.3, color: "var(--ink)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{val(a.title, lang) || t("untitledArticle", lang)}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, lineHeight: 1.3, color: "var(--ink)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{val(a.title, lang) || t("untitledArticle", lang)}</div>
+                        {(() => {
+                          const s = articleStats[a.slug];
+                          return (
+                            <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                              <span><Icon name="user" size={11} color="var(--ink-faint)" /> {s?.views ?? 0} {lang === "jp" ? "閲覧" : "views"}</span>
+                              <span><Icon name="clock" size={11} color="var(--ink-faint)" /> {fmtDuration(s?.avgMs ?? 0)}</span>
+                              <span>{Math.round((s?.ctr ?? 0) * 100)}% {lang === "jp" ? "クリック率" : "CTR"}</span>
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </td>
                   <td style={td}><CatPill catKey={a.category} lang={lang} /></td>

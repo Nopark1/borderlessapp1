@@ -7,8 +7,8 @@ import { CatPill, Byline } from "../journal/JournalParts";
 import { covers, blogCats } from "@/lib/data";
 import { createClient } from "@/lib/supabase-browser";
 import { saveArticle, deleteArticle } from "@/app/admin/actions";
-import { t } from "@/lib/i18n";
-import type { Article, ArticleInput, AdminAuthor, Attachment, BlogCategory, Lang } from "@/lib/types";
+import { t, fmtDuration } from "@/lib/i18n";
+import type { Article, ArticleInput, AdminAuthor, ArticleStat, Attachment, BlogCategory, Lang } from "@/lib/types";
 
 const CAT_KEYS = Object.keys(blogCats) as BlogCategory[];
 const COVER_KEYS = Object.keys(covers);
@@ -17,12 +17,14 @@ export function ArticleStudio({
   lang,
   initial,
   authors,
+  stat,
   onClose,
   onSaved,
 }: {
   lang: Lang;
   initial: Article | null;
   authors: AdminAuthor[];
+  stat?: ArticleStat;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -181,6 +183,20 @@ export function ArticleStudio({
         </div>
 
         {error && <div style={{ background: "#f8e8e3", color: "var(--danger)", fontWeight: 600, fontSize: 13, borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>{error}</div>}
+
+        {/* analytics (existing articles only) */}
+        {editing && (
+          <div style={sec}>
+            <div style={secTitle}><Icon name="chart" size={16} color="var(--primary)" /> {t("analyticsHead", lang)}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 10 }}>
+              <StatCard label={t("statViews", lang)} value={String(stat?.views ?? 0)} />
+              <StatCard label={t("statReaders", lang)} value={String(stat?.readers ?? 0)} />
+              <StatCard label={t("statCtr", lang)} value={`${Math.round((stat?.ctr ?? 0) * 100)}%`} />
+              <StatCard label={t("statTime", lang)} value={fmtDuration(stat?.avgMs ?? 0)} />
+            </div>
+            <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 10 }}>{(stat?.views ?? 0) === 0 ? t("statEmpty", lang) : t("statNote", lang)}</div>
+          </div>
+        )}
 
         {/* content language switch */}
         <div style={sec}>
@@ -348,6 +364,15 @@ export function ArticleStudio({
           {t("previewLangHint", lang)}: <b>{plang === "en" ? "English" : "日本語"}</b>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ background: "#fbf6ee", border: "1px solid var(--line)", borderRadius: 11, padding: "12px 14px" }}>
+      <div style={{ fontSize: 10.5, color: "var(--ink-soft)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>{label}</div>
+      <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, color: "var(--ink)", marginTop: 4 }}>{value}</div>
     </div>
   );
 }

@@ -263,6 +263,13 @@ const S: Dict = {
   addFiles: { en: "Add files", jp: "ファイルを追加" },
   attachHint: { en: "Images, PDFs and other files. Images show inline in the article; other files appear as downloads.", jp: "画像・PDF・その他のファイル。画像は本文下に表示され、その他はダウンロードとして表示されます。" },
   uploadingFiles: { en: "Uploading…", jp: "アップロード中…" },
+  analyticsHead: { en: "Analytics", jp: "アナリティクス" },
+  statViews: { en: "Views", jp: "閲覧数" },
+  statReaders: { en: "Readers", jp: "読者数" },
+  statCtr: { en: "Click-through", jp: "クリック率" },
+  statTime: { en: "Avg. time", jp: "平均滞在時間" },
+  statNote: { en: "Non-admin activity only. Click-through = article opens ÷ times shown in the list.", jp: "管理者を除いた統計です。クリック率＝一覧表示に対する開封数の割合。" },
+  statEmpty: { en: "No data yet — stats appear once readers visit.", jp: "まだデータがありません。読者が訪問すると表示されます。" },
   publishArticle: { en: "Publish", jp: "公開する" },
   enVersion: { en: "English", jp: "英語版" },
   jpVersion: { en: "日本語", jp: "日本語版" },
@@ -306,6 +313,14 @@ export function relDay(iso: string, lang: Lang): string {
   if (n <= 0) return S.today[lang] || S.today.en;
   if (n === 1) return S.tomorrow[lang] || S.tomorrow.en;
   return lang === "jp" ? `${n}日後` : `in ${n} days`;
+}
+
+/** milliseconds → "45s" or "2:30" (used for average time-on-page). */
+export function fmtDuration(ms: number): string {
+  const s = Math.round((ms || 0) / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, "0")}`;
 }
 
 export function fmtDate(iso: string, lang: Lang): string {

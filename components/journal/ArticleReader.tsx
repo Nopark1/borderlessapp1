@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
@@ -8,6 +8,7 @@ import { CatPill } from "./JournalParts";
 import { BlogHeader } from "./BlogHeader";
 import { blogCats, avatarColor } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
+import { trackEvent } from "@/lib/track";
 import type { Article, Lang } from "@/lib/types";
 
 export function ArticleReader({ article, more }: { article: Article; more: Article[] }) {
@@ -16,6 +17,35 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
   const paras = (val(article.body, lang) || "").split(/\n\n+/).filter(Boolean);
   const imgs = article.attachments.filter((a) => a.type.startsWith("image/"));
   const files = article.attachments.filter((a) => !a.type.startsWith("image/"));
+
+  // Record a view on open, and total *visible* time on leave (dwell). Sent via
+  // sendBeacon so it survives tab close / navigation. Admins are filtered server-side.
+  useEffect(() => {
+    trackEvent(article.slug, "view");
+    let visibleStart = typeof document !== "undefined" && document.visibilityState === "visible" ? Date.now() : 0;
+    let acc = 0;
+    let done = false;
+    const onVis = () => {
+      if (document.visibilityState === "hidden") {
+        if (visibleStart) { acc += Date.now() - visibleStart; visibleStart = 0; }
+      } else if (!visibleStart) {
+        visibleStart = Date.now();
+      }
+    };
+    const send = () => {
+      if (done) return;
+      if (visibleStart) { acc += Date.now() - visibleStart; visibleStart = 0; }
+      if (acc >= 1000) trackEvent(article.slug, "dwell", acc);
+      done = true;
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", send);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", send);
+      send();
+    };
+  }, [article.slug]);
 
   function share() {
     const url = typeof window !== "undefined" ? window.location.href : "";

@@ -6,7 +6,7 @@ import { Icon } from "../Icon";
 import { CatPill, Byline } from "../journal/JournalParts";
 import { covers, blogCats } from "@/lib/data";
 import { createClient } from "@/lib/supabase-browser";
-import { saveArticle } from "@/app/admin/actions";
+import { saveArticle, deleteArticle } from "@/app/admin/actions";
 import { t } from "@/lib/i18n";
 import type { Article, ArticleInput, AdminAuthor, Attachment, BlogCategory, Lang } from "@/lib/types";
 
@@ -139,6 +139,16 @@ export function ArticleStudio({
       else onSaved();
     });
 
+  const remove = () =>
+    startTransition(async () => {
+      setError("");
+      if (!initial) return;
+      if (!confirm(t("deleteArticleQ", lang))) return;
+      const res = await deleteArticle(initial.id);
+      if (res.error) setError(res.error);
+      else onSaved();
+    });
+
   const fld: React.CSSProperties = { width: "100%", padding: "11px 13px", borderRadius: 10, border: "1.5px solid var(--line)", background: "#fbf6ee", fontSize: 14, fontFamily: "var(--font-ui)", color: "var(--ink)", outline: "none", boxSizing: "border-box" };
   const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 6, display: "block" };
   const sec: React.CSSProperties = { background: "#fff", border: "1px solid var(--line)", borderRadius: 16, padding: "18px 20px", marginBottom: 16 };
@@ -160,7 +170,8 @@ export function ArticleStudio({
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {editing && <button className="btn btn-ghost btn-sm" disabled={pending} onClick={remove} style={{ color: "var(--danger)" }}><Icon name="trash" size={14} color="var(--danger)" /> {t("deleteE", lang)}</button>}
             {(!editing || initial!.status === "draft") && <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => save("draft")}>{t("saveDraft", lang)}</button>}
             {editing && initial!.status === "published" && <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => save("draft")}>{t("unpublish", lang)}</button>}
             <button className="btn btn-primary btn-sm" disabled={pending} onClick={() => save("published")}>

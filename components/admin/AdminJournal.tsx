@@ -64,13 +64,13 @@ export function AdminJournal({
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 760, tableLayout: "fixed" }}>
           <thead>
             <tr>
-              <th style={{ ...th, width: "36%" }}>{t("articleTitle", lang)}</th>
-              <th style={{ ...th, width: "11%", whiteSpace: "nowrap" }}>{t("topicField", lang)}</th>
-              <th style={{ ...th, width: "18%", whiteSpace: "nowrap" }}>{t("authorField", lang)}</th>
-              <th style={{ ...th, width: "10%", whiteSpace: "nowrap" }}>{lang === "jp" ? "言語" : "Lang"}</th>
+              <th style={{ ...th, width: "31%" }}>{t("articleTitle", lang)}</th>
+              <th style={{ ...th, width: "10%", whiteSpace: "nowrap" }}>{t("topicField", lang)}</th>
+              <th style={{ ...th, width: "17%", whiteSpace: "nowrap" }}>{t("authorField", lang)}</th>
+              <th style={{ ...th, width: "9%", whiteSpace: "nowrap" }}>{lang === "jp" ? "言語" : "Lang"}</th>
               <th style={{ ...th, width: "11%", whiteSpace: "nowrap" }}>{lang === "jp" ? "日付" : "Date"}</th>
               <th style={{ ...th, width: "10%", whiteSpace: "nowrap" }}>{lang === "jp" ? "状態" : "Status"}</th>
-              <th style={{ ...th, width: "4%" }}></th>
+              <th style={{ ...th, width: "12%", whiteSpace: "nowrap" }}>{lang === "jp" ? "操作" : "Actions"}</th>
             </tr>
           </thead>
           <tbody>

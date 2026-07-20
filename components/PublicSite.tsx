@@ -14,6 +14,7 @@ import { Reveal } from "./Reveal";
 import { EmptyState } from "./EmptyState";
 import { isPast } from "@/lib/formulas";
 import { t, daysUntil } from "@/lib/i18n";
+import { useSiteLang } from "@/lib/lang";
 import type { Event, Lang } from "@/lib/types";
 
 const playful = true; // the public site uses the youthful "playful" vibe
@@ -31,7 +32,7 @@ export function PublicSite({
   instagramUrl?: string | null;
   discordUrl?: string | null;
 }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useSiteLang();
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const feedRef = useRef<HTMLDivElement>(null);
 

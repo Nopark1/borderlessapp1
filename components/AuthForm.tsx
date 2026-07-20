@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "./Icon";
 import { createClient } from "@/lib/supabase-browser";
 import { t } from "@/lib/i18n";
+import { useSiteLang } from "@/lib/lang";
 import type { Lang } from "@/lib/types";
 
 type Screen = "form" | "magic-sent" | "confirm-sent";
@@ -20,7 +21,7 @@ export function AuthForm({
   initialRef?: string;
 }) {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useSiteLang();
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

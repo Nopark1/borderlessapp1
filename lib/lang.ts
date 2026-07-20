@@ -1,6 +1,7 @@
-/* Language for the public Blog: auto-detect from the browser on first visit,
-   remember a manual choice, and stay SSR-safe (renders "en" on the server, then
-   resolves on the client to avoid hydration mismatches). */
+/* Site language: auto-detect from the browser on first visit, remember a manual
+   choice, and stay SSR-safe (renders "en" on the server, then resolves on the
+   client to avoid hydration mismatches). Shared across the whole site so a
+   choice persists between the homepage, events, member area and Blog. */
 
 import { useEffect, useState } from "react";
 import type { Lang } from "./types";
@@ -8,7 +9,7 @@ import type { Lang } from "./types";
 const LANG_KEY = "bl_lang";
 
 /** Saved choice if present, else the browser's preferred language (ja → jp). */
-export function detectBlogLang(): Lang {
+export function detectSiteLang(): Lang {
   if (typeof window === "undefined") return "en";
   try {
     const saved = localStorage.getItem(LANG_KEY);
@@ -20,10 +21,10 @@ export function detectBlogLang(): Lang {
   }
 }
 
-export function useBlogLang(): [Lang, (l: Lang) => void] {
+export function useSiteLang(): [Lang, (l: Lang) => void] {
   const [lang, setLang] = useState<Lang>("en"); // matches SSR; resolved on mount
   useEffect(() => {
-    const detected = detectBlogLang();
+    const detected = detectSiteLang();
     if (detected !== "en") setLang(detected);
   }, []);
   const choose = (l: Lang) => {

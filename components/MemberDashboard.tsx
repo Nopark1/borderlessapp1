@@ -12,6 +12,7 @@ import { EmptyState } from "./EmptyState";
 import { CountUp } from "./CountUp";
 import { inviteBonus } from "@/lib/formulas";
 import { t, val, fmtDate } from "@/lib/i18n";
+import { useSiteLang } from "@/lib/lang";
 import type { Lang } from "@/lib/types";
 import type { DashboardData } from "@/lib/member";
 
@@ -24,7 +25,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 export function MemberDashboard({ data }: { data: DashboardData }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useSiteLang();
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 

@@ -21,6 +21,7 @@ const EventStudio = dynamic(() => import("./EventStudio").then((m) => m.EventStu
 const AdminJournal = dynamic(() => import("./AdminJournal").then((m) => m.AdminJournal), { loading: () => tabFallback });
 const ArticleStudio = dynamic(() => import("./ArticleStudio").then((m) => m.ArticleStudio), { loading: () => tabFallback });
 import { t } from "@/lib/i18n";
+import { useSiteLang } from "@/lib/lang";
 import type { Event, Lang, Reward, Article, AdminAuthor, ArticleStat, BlogAnalytics } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
@@ -62,7 +63,7 @@ export function AdminApp({
   email: string;
 }) {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useSiteLang();
   const [tab, setTab] = useState<Tab>("events");
   const [editor, setEditor] = useState<Editor>(null);
   const [artEditor, setArtEditor] = useState<ArtEditor>(null);

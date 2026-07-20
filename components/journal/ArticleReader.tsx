@@ -9,11 +9,11 @@ import { BlogHeader } from "./BlogHeader";
 import { blogCats, avatarColor } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import { trackEvent, trafficSource } from "@/lib/track";
-import { useBlogLang, detectBlogLang } from "@/lib/blog-lang";
+import { useSiteLang, detectSiteLang } from "@/lib/lang";
 import type { Article, Lang } from "@/lib/types";
 
 export function ArticleReader({ article, more }: { article: Article; more: Article[] }) {
-  const [lang, setLang] = useBlogLang();
+  const [lang, setLang] = useSiteLang();
   const [shareMsg, setShareMsg] = useState("");
   const langRef = useRef<Lang>(lang);
   langRef.current = lang; // latest chosen language, read by beacons on leave
@@ -27,7 +27,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
   // Admins are filtered out server-side.
   useEffect(() => {
     // record the language actually served (detected before the toggle re-renders)
-    trackEvent(article.slug, "view", { source: trafficSource(), lang: detectBlogLang() });
+    trackEvent(article.slug, "view", { source: trafficSource(), lang: detectSiteLang() });
     let visibleStart = typeof document !== "undefined" && document.visibilityState === "visible" ? Date.now() : 0;
     let acc = 0;
     let done = false;

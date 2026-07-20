@@ -10,6 +10,7 @@ import { Icon } from "./Icon";
 import { EventMap } from "./EventMap";
 import { isPast, yen, pointsFor } from "@/lib/formulas";
 import { t, val, fmtDate } from "@/lib/i18n";
+import { useSiteLang } from "@/lib/lang";
 import { toggleRsvp } from "@/app/events/actions";
 import type { Event, Lang } from "@/lib/types";
 
@@ -35,7 +36,7 @@ const avatarColors = ["#8A3233", "#B4893C", "#4E8FA6", "#5B6B4A", "#C06A3C", "#5
 
 export function EventDetail({ event }: { event: Event }) {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useSiteLang();
   const [joined, setJoined] = useState(false);
   const [count, setCount] = useState(event.rsvp || 0); // displayed RSVP count
   const [pending, startTransition] = useTransition();

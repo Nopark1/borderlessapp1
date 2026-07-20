@@ -12,6 +12,7 @@ import { StatusPill } from "./AdminShared";
 import { pointsFor, yen, tierFor } from "@/lib/formulas";
 import { tiers as defaultTiers } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
+import { useSiteLang } from "@/lib/lang";
 import { finishCheckIn } from "@/app/admin/actions";
 import type { Event, Lang, Tier } from "@/lib/types";
 
@@ -26,7 +27,7 @@ export type RosterMember = {
 
 export function CheckInScreen({ event, roster, addable = [], tiers = defaultTiers }: { event: Event; roster: RosterMember[]; addable?: RosterMember[]; tiers?: Tier[] }) {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useSiteLang();
   const [present, setPresent] = useState<Set<string>>(
     () => new Set(roster.filter((m) => m.attended).map((m) => m.id))
   );

@@ -21,7 +21,7 @@ const EventStudio = dynamic(() => import("./EventStudio").then((m) => m.EventStu
 const AdminJournal = dynamic(() => import("./AdminJournal").then((m) => m.AdminJournal), { loading: () => tabFallback });
 const ArticleStudio = dynamic(() => import("./ArticleStudio").then((m) => m.ArticleStudio), { loading: () => tabFallback });
 import { t } from "@/lib/i18n";
-import type { Event, Lang, Reward, Article, AdminAuthor, ArticleStat } from "@/lib/types";
+import type { Event, Lang, Reward, Article, AdminAuthor, ArticleStat, BlogAnalytics } from "@/lib/types";
 import type { OverviewData, MemberRow } from "@/lib/admin-stats";
 
 type Tab = "overview" | "events" | "journal" | "members" | "rewards" | "site";
@@ -36,6 +36,7 @@ export function AdminApp({
   articles,
   authors,
   articleStats,
+  blogAnalytics,
   heroImageUrl,
   lineUrl,
   instagramUrl,
@@ -51,6 +52,7 @@ export function AdminApp({
   articles: Article[];
   authors: AdminAuthor[];
   articleStats: Record<string, ArticleStat>;
+  blogAnalytics: BlogAnalytics;
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
@@ -165,7 +167,7 @@ export function AdminApp({
         ) : tab === "events" ? (
           <AdminEvents lang={lang} events={initialEvents} onNew={openNew} onEdit={(e) => setEditor(e)} onCheckin={onCheckin} onDuplicate={onDuplicate} onDelete={onDelete} />
         ) : tab === "journal" ? (
-          <AdminJournal lang={lang} articles={articles} articleStats={articleStats} onNew={openNewArticle} onEdit={(a) => setArtEditor(a)} />
+          <AdminJournal lang={lang} articles={articles} articleStats={articleStats} blogAnalytics={blogAnalytics} onNew={openNewArticle} onEdit={(a) => setArtEditor(a)} />
         ) : tab === "overview" ? (
           <AdminOverview lang={lang} data={overview} />
         ) : tab === "members" ? (

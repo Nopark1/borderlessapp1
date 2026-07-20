@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
@@ -8,20 +8,24 @@ import { CatPill } from "./JournalParts";
 import { BlogHeader } from "./BlogHeader";
 import { blogCats, avatarColor } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
-import { trackEvent } from "@/lib/track";
+import { trackEvent, trafficSource } from "@/lib/track";
 import type { Article, Lang } from "@/lib/types";
 
 export function ArticleReader({ article, more }: { article: Article; more: Article[] }) {
   const [lang, setLang] = useState<Lang>("en");
+  const [shareMsg, setShareMsg] = useState("");
+  const langRef = useRef<Lang>(lang);
+  langRef.current = lang; // latest chosen language, read by beacons on leave
   const cat = blogCats[article.category];
   const paras = (val(article.body, lang) || "").split(/\n\n+/).filter(Boolean);
   const imgs = article.attachments.filter((a) => a.type.startsWith("image/"));
   const files = article.attachments.filter((a) => !a.type.startsWith("image/"));
 
-  // Record a view on open, and total *visible* time on leave (dwell). Sent via
-  // sendBeacon so it survives tab close / navigation. Admins are filtered server-side.
+  // Record a view (with traffic source + language) on open, and total *visible*
+  // time on leave (dwell). Sent via sendBeacon so it survives tab close.
+  // Admins are filtered out server-side.
   useEffect(() => {
-    trackEvent(article.slug, "view");
+    trackEvent(article.slug, "view", { source: trafficSource(), lang: langRef.current });
     let visibleStart = typeof document !== "undefined" && document.visibilityState === "visible" ? Date.now() : 0;
     let acc = 0;
     let done = false;
@@ -35,7 +39,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
     const send = () => {
       if (done) return;
       if (visibleStart) { acc += Date.now() - visibleStart; visibleStart = 0; }
-      if (acc >= 1000) trackEvent(article.slug, "dwell", acc);
+      if (acc >= 1000) trackEvent(article.slug, "dwell", { ms: acc, lang: langRef.current });
       done = true;
     };
     document.addEventListener("visibilitychange", onVis);
@@ -47,14 +51,45 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
     };
   }, [article.slug]);
 
-  function share() {
+  // Read completion: fire once when the reader scrolls near the bottom.
+  useEffect(() => {
+    let fired = false;
+    const onScroll = () => {
+      if (fired) return;
+      const scrolled = window.scrollY + window.innerHeight;
+      const full = document.documentElement.scrollHeight;
+      if (full > 0 && scrolled >= full * 0.9) {
+        fired = true;
+        trackEvent(article.slug, "complete", { lang: langRef.current });
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [article.slug]);
+
+  async function share() {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const title = val(article.title, lang);
-    if (typeof navigator !== "undefined" && (navigator as Navigator).share) {
-      (navigator as Navigator).share({ title, url }).catch(() => {});
-    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(url).catch(() => {});
+    trackEvent(article.slug, "share");
+    // Native share sheet on mobile / Apple (Web Share API).
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return; // user dismissed — done
+        // otherwise fall through to clipboard
+      }
     }
+    // Desktop / unsupported: copy the link and confirm.
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMsg(lang === "jp" ? "リンクをコピーしました" : "Link copied!");
+    } catch {
+      setShareMsg(url);
+    }
+    setTimeout(() => setShareMsg(""), 2200);
   }
 
   return (
@@ -69,7 +104,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
               <Link href="/journal" title={t("journalNav", lang)} style={{ position: "absolute", top: 14, left: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, textDecoration: "none" }}>
                 <Icon name="arrowL" size={19} color="var(--ink)" />
               </Link>
-              <button onClick={share} title="Share" style={{ position: "absolute", top: 14, right: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", border: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5 }}>
+              <button onClick={share} title={lang === "jp" ? "共有" : "Share"} style={{ position: "absolute", top: 14, right: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", border: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5 }}>
                 <Icon name="share" size={17} color="var(--ink)" />
               </button>
               <div style={{ position: "absolute", left: 18, bottom: 18 }}>
@@ -108,7 +143,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
                 <img key={att.url} src={att.url} alt={att.name} style={{ width: "100%", borderRadius: "var(--radius-sm)", display: "block", border: "1px solid var(--line)" }} />
               ))}
               {files.map((att) => (
-                <a key={att.url} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "12px 14px" }}>
+                <a key={att.url} href={att.url} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent(article.slug, "download")} style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "12px 14px" }}>
                   <span style={{ width: 40, height: 40, borderRadius: 9, background: "var(--primary-soft)", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 0 40px" }}>
                     <Icon name="download" size={18} color="var(--primary)" />
                   </span>
@@ -122,13 +157,24 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
             </div>
           )}
 
+          {/* call to action — join the circle */}
+          <div style={{ marginTop: 34, background: "var(--primary)", borderRadius: "var(--radius)", padding: "22px 22px", color: "#fff", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, justifyContent: "space-between" }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18 }}>{t("ctaTitle", lang)}</div>
+              <div style={{ fontSize: 13, opacity: 0.92, marginTop: 4, maxWidth: 380 }}>{t("ctaText", lang)}</div>
+            </div>
+            <Link href="/#events" onClick={() => trackEvent(article.slug, "cta")} className="btn" style={{ background: "#fff", color: "var(--primary)", fontWeight: 800, whiteSpace: "nowrap" }}>
+              <Icon name="calendar" size={15} color="var(--primary)" /> {t("browse", lang)}
+            </Link>
+          </div>
+
           {/* more reading */}
           {more.length > 0 && (
             <div style={{ marginTop: 36, paddingTop: 24, borderTop: "1px solid var(--line)" }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 17, marginBottom: 14 }}>{t("moreReading", lang)}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {more.map((m) => (
-                  <Link key={m.id} href={`/journal/${m.slug}`} className="tap-card" style={{ display: "flex", gap: 13, alignItems: "center", textDecoration: "none" }}>
+                  <Link key={m.id} href={`/journal/${m.slug}`} onClick={() => trackEvent(article.slug, "readnext")} className="tap-card" style={{ display: "flex", gap: 13, alignItems: "center", textDecoration: "none" }}>
                     <div style={{ flex: "0 0 68px" }}><Cover seed={m.cover} h={68} radius={11} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <CatPill catKey={m.category} lang={lang} />
@@ -141,6 +187,12 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
           )}
         </div>
       </div>
+
+      {shareMsg && (
+        <div style={{ position: "fixed", bottom: 22, left: "50%", transform: "translateX(-50%)", background: "var(--ink)", color: "#f6efe2", padding: "10px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, zIndex: 50, boxShadow: "var(--shadow-lg)" }}>
+          {shareMsg}
+        </div>
+      )}
     </div>
   );
 }

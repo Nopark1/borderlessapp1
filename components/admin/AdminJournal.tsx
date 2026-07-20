@@ -7,19 +7,22 @@ import { Icon } from "../Icon";
 import { PageHead } from "./AdminShared";
 import { CatPill, Byline } from "../journal/JournalParts";
 import { deleteArticle } from "@/app/admin/actions";
+import { blogCats } from "@/lib/data";
 import { t, val, fmtDate, fmtDuration } from "@/lib/i18n";
-import type { Article, ArticleStat, Lang } from "@/lib/types";
+import type { Article, ArticleStat, BlogAnalytics, BlogCategory, Lang, NameCount } from "@/lib/types";
 
 export function AdminJournal({
   lang,
   articles,
   articleStats,
+  blogAnalytics,
   onNew,
   onEdit,
 }: {
   lang: Lang;
   articles: Article[];
   articleStats: Record<string, ArticleStat>;
+  blogAnalytics: BlogAnalytics;
   onNew: () => void;
   onEdit: (a: Article) => void;
 }) {
@@ -55,6 +58,8 @@ export function AdminJournal({
       {msg && (
         <div style={{ background: "#f8e8e3", color: "var(--danger)", fontWeight: 600, fontSize: 13, borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>{msg}</div>
       )}
+
+      <BlogOverview lang={lang} ba={blogAnalytics} />
 
       <div className="seg" style={{ marginBottom: 18 }}>
         {([["all", t("allArticles", lang)], ["published", t("publishedTab", lang)], ["draft", t("draftTab", lang)]] as const).map(([k, label]) => (
@@ -134,4 +139,107 @@ const iconBtn: React.CSSProperties = { all: "unset", cursor: "pointer", width: 3
 
 function LangDot({ on, label }: { on: boolean; label: string }) {
   return <span style={{ fontFamily: "var(--font-ui)", fontSize: 10.5, fontWeight: 800, padding: "3px 7px", borderRadius: 6, background: on ? "var(--success-soft)" : "#f0e7d8", color: on ? "var(--success)" : "var(--ink-faint)" }}>{label}</span>;
+}
+
+/* ---- blog-wide analytics overview ---- */
+function BlogOverview({ lang, ba }: { lang: Lang; ba: BlogAnalytics }) {
+  const box: React.CSSProperties = { background: "#fbf6ee", border: "1px solid var(--line)", borderRadius: 11, padding: "12px 14px" };
+  const topics: NameCount[] = ba.byTopic.map((x) => ({ name: (blogCats[x.name as BlogCategory] ? (lang === "jp" ? blogCats[x.name as BlogCategory].short.jp : blogCats[x.name as BlogCategory].short.en) : x.name), count: x.count }));
+  return (
+    <div className="metric" style={{ padding: "18px 20px", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <Icon name="chart" size={18} color="var(--primary)" />
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>{t("blogOverview", lang)}</div>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--ink-faint)", fontWeight: 600 }}>{t("statNote", lang)}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginBottom: 16 }}>
+        <div style={box}><Metric label={t("statViews", lang)} value={String(ba.totalViews)} /></div>
+        <div style={box}><Metric label={t("statReaders", lang)} value={String(ba.readers)} /></div>
+        <div style={box}><Metric label={t("statTime", lang)} value={fmtDuration(ba.avgMs)} /></div>
+        <div style={box}><Metric label={t("statCompletion", lang)} value={`${Math.round(ba.completionRate * 100)}%`} /></div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 16 }}>
+        <Panel title={t("statNewReturning", lang)}>
+          <SplitBar segs={[{ label: t("statNew", lang), value: ba.newReaders, color: "var(--primary)" }, { label: t("statReturning", lang), value: ba.returningReaders, color: "var(--gold)" }]} />
+        </Panel>
+        <Panel title={t("statDevice", lang)}>
+          <SplitBar segs={[{ label: t("statMobile", lang), value: ba.device.mobile, color: "var(--primary)" }, { label: t("statDesktop", lang), value: ba.device.desktop + ba.device.tablet, color: "var(--gold)" }]} />
+        </Panel>
+        <Panel title={t("statSources", lang)}><BarList items={ba.topSources} /></Panel>
+        <Panel title={t("statByTopic", lang)}><BarList items={topics} /></Panel>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>{lang === "jp" ? "閲覧数（14日間）" : "Views (14 days)"}</div>
+        <Sparkline data={ba.trend.map((d) => d.views)} />
+      </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <>
+      <div style={{ fontSize: 10.5, color: "var(--ink-soft)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>{label}</div>
+      <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, color: "var(--ink)", marginTop: 4 }}>{value}</div>
+    </>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function SplitBar({ segs }: { segs: { label: string; value: number; color: string }[] }) {
+  const total = segs.reduce((s, x) => s + x.value, 0) || 1;
+  return (
+    <div>
+      <div style={{ display: "flex", height: 10, borderRadius: 5, overflow: "hidden", background: "var(--line)" }}>
+        {segs.map((s) => <div key={s.label} style={{ width: `${(s.value / total) * 100}%`, background: s.color }} />)}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8 }}>
+        {segs.map((s) => (
+          <span key={s.label} style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.color }} /> {s.label} {s.value}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BarList({ items }: { items: NameCount[] }) {
+  if (!items.length) return <div style={{ fontSize: 12, color: "var(--ink-faint)", fontWeight: 600 }}>—</div>;
+  const max = Math.max(...items.map((i) => i.count), 1);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {items.map((i) => (
+        <div key={i.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", width: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textTransform: "capitalize" }}>{i.name}</span>
+          <span style={{ flex: 1, height: 8, borderRadius: 4, background: "var(--line)", overflow: "hidden" }}>
+            <span style={{ display: "block", height: "100%", width: `${(i.count / max) * 100}%`, background: "var(--primary)" }} />
+          </span>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink-soft)", width: 34, textAlign: "right" }}>{i.count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Sparkline({ data }: { data: number[] }) {
+  const max = Math.max(...data, 1);
+  const w = 100, h = 28, n = data.length;
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: 40, display: "block" }}>
+      {data.map((v, i) => {
+        const bw = w / n;
+        const bh = (v / max) * (h - 2);
+        return <rect key={i} x={i * bw + 0.6} y={h - bh} width={Math.max(1, bw - 1.2)} height={bh} rx="0.6" fill="var(--primary)" opacity={0.85} />;
+      })}
+    </svg>
+  );
 }

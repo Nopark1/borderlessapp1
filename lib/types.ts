@@ -148,6 +148,8 @@ export type ArticleInput = {
 /** An admin account offered as an author in the studio dropdown. */
 export type AdminAuthor = { id: string; name: string };
 
+export type NameCount = { name: string; count: number };
+
 /** Aggregated per-article analytics (non-admin traffic only). */
 export type ArticleStat = {
   views: number;
@@ -155,4 +157,30 @@ export type ArticleStat = {
   ctr: number; // views / impressions (0–1+)
   avgMs: number; // average time on page, milliseconds
   readers: number; // distinct anonymous sessions that viewed
+  completions: number;
+  completionRate: number; // completions / views
+  quickExits: number;
+  quickExitRate: number; // dwell events under 10s ÷ dwell events
+  shares: number;
+  downloads: number;
+  readNext: number;
+  ctaClicks: number; // clicked the event/join CTA from this article
+  viewsWeek: number; // views in the last 7 days (momentum)
+  lang: { en: number; jp: number };
+  device: { mobile: number; desktop: number; tablet: number };
+  sources: NameCount[]; // top traffic sources
+};
+
+/** Blog-wide analytics summary. */
+export type BlogAnalytics = {
+  totalViews: number;
+  readers: number;
+  newReaders: number;
+  returningReaders: number;
+  avgMs: number;
+  completionRate: number;
+  device: { mobile: number; desktop: number; tablet: number };
+  topSources: NameCount[];
+  byTopic: NameCount[]; // views per category key (living/jobs/industry)
+  trend: { day: string; views: number }[]; // last 14 days of views
 };

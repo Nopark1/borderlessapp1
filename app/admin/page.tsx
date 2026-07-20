@@ -33,6 +33,7 @@ export default async function AdminPage() {
         articles={bundle.articles}
         authors={bundle.authors}
         articleStats={bundle.articleStats}
+        blogAnalytics={bundle.blogAnalytics}
         heroImageUrl={bundle.heroImageUrl}
         lineUrl={bundle.lineUrl}
         instagramUrl={bundle.instagramUrl}

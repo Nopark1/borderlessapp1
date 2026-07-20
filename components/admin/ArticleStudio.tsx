@@ -188,11 +188,23 @@ export function ArticleStudio({
         {editing && (
           <div style={sec}>
             <div style={secTitle}><Icon name="chart" size={16} color="var(--primary)" /> {t("analyticsHead", lang)}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(94px, 1fr))", gap: 10 }}>
               <StatCard label={t("statViews", lang)} value={String(stat?.views ?? 0)} />
               <StatCard label={t("statReaders", lang)} value={String(stat?.readers ?? 0)} />
+              <StatCard label={t("statViewsWeek", lang)} value={String(stat?.viewsWeek ?? 0)} />
               <StatCard label={t("statCtr", lang)} value={`${Math.round((stat?.ctr ?? 0) * 100)}%`} />
               <StatCard label={t("statTime", lang)} value={fmtDuration(stat?.avgMs ?? 0)} />
+              <StatCard label={t("statCompletion", lang)} value={`${Math.round((stat?.completionRate ?? 0) * 100)}%`} />
+              <StatCard label={t("statQuickExit", lang)} value={`${Math.round((stat?.quickExitRate ?? 0) * 100)}%`} />
+              <StatCard label={t("statConversions", lang)} value={String(stat?.ctaClicks ?? 0)} />
+              <StatCard label={t("statShares", lang)} value={String(stat?.shares ?? 0)} />
+              <StatCard label={t("statDownloads", lang)} value={String(stat?.downloads ?? 0)} />
+              <StatCard label={t("statReadNext", lang)} value={String(stat?.readNext ?? 0)} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12, fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}>
+              <div><b style={{ color: "var(--ink)" }}>{t("statLangSplit", lang)}:</b> EN {stat?.lang.en ?? 0} · JP {stat?.lang.jp ?? 0}</div>
+              <div><b style={{ color: "var(--ink)" }}>{t("statDevice", lang)}:</b> {t("statMobile", lang)} {stat?.device.mobile ?? 0} · {t("statDesktop", lang)} {(stat?.device.desktop ?? 0) + (stat?.device.tablet ?? 0)}</div>
+              <div style={{ textTransform: "capitalize" }}><b style={{ color: "var(--ink)" }}>{t("statSources", lang)}:</b> {(stat?.sources ?? []).length ? stat!.sources.map((s) => `${s.name} ${s.count}`).join(" · ") : "—"}</div>
             </div>
             <div style={{ fontSize: 11, color: "var(--ink-faint)", fontWeight: 600, marginTop: 10 }}>{(stat?.views ?? 0) === 0 ? t("statEmpty", lang) : t("statNote", lang)}</div>
           </div>

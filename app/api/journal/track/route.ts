@@ -5,10 +5,16 @@ import { createClient } from "@/lib/supabase-server";
 // so their reading/clicking never counts toward the stats.
 export const dynamic = "force-dynamic";
 
-const TYPES = new Set(["impression", "view", "dwell"]);
+const TYPES = new Set(["impression", "view", "dwell", "complete", "share", "download", "readnext", "cta"]);
+
+function deviceOf(ua: string): string {
+  if (/iPad|Tablet|PlayBook|Silk/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) return "tablet";
+  if (/Mobi|iPhone|iPod|Windows Phone/i.test(ua)) return "mobile";
+  return "desktop";
+}
 
 export async function POST(req: NextRequest) {
-  let body: { slug?: string; type?: string; ms?: number; session?: string };
+  let body: { slug?: string; type?: string; ms?: number; source?: string; lang?: string; session?: string };
   try {
     body = await req.json();
   } catch {
@@ -32,12 +38,25 @@ export async function POST(req: NextRequest) {
   }
 
   const ms = type === "dwell" ? Math.max(0, Math.min(6 * 60 * 60 * 1000, Math.round(Number(body.ms) || 0))) : null;
-  const session_id = typeof body.session === "string" ? body.session.slice(0, 64) : null;
+  const base = {
+    slug,
+    type,
+    ms,
+    session: typeof body.session === "string" ? body.session.slice(0, 64) : null,
+  };
+  const full = {
+    ...base,
+    source: typeof body.source === "string" ? body.source.slice(0, 60) : null,
+    lang: body.lang === "jp" ? "jp" : body.lang === "en" ? "en" : null,
+    device: deviceOf(req.headers.get("user-agent") || ""),
+  };
 
   try {
-    await supabase.from("article_events").insert({ slug, type, ms, session: session_id });
+    const { error } = await supabase.from("article_events").insert(full);
+    // Fall back to base columns if the dimension columns aren't migrated yet (0016).
+    if (error) await supabase.from("article_events").insert(base);
   } catch {
-    /* table not present yet (pre-migration) — ignore */
+    /* table not present yet (pre-migration 0015) — ignore */
   }
   return NextResponse.json({ ok: true });
 }

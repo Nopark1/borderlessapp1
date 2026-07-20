@@ -4,9 +4,14 @@
 
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Event, Reward, Article, AdminAuthor, ArticleStat } from "./types";
+import type { Event, Reward, Article, AdminAuthor, ArticleStat, BlogAnalytics } from "./types";
 import { fromRow } from "./events";
-import { getAdminArticles, getAdminAuthors, getArticleStats } from "./journal";
+import { getAdminArticles, getAdminAuthors, getBlogStats } from "./journal";
+
+const EMPTY_BLOG_ANALYTICS: BlogAnalytics = {
+  totalViews: 0, readers: 0, newReaders: 0, returningReaders: 0, avgMs: 0, completionRate: 0,
+  device: { mobile: 0, desktop: 0, tablet: 0 }, topSources: [], byTopic: [], trend: [],
+};
 import { rewards as seedRewards, seedArticles, buildTiers, DEFAULT_TIER_MINS } from "./data";
 import { pointsFor, finOf, tierFor } from "./formulas";
 
@@ -182,6 +187,7 @@ export type AdminBundle = {
   articles: Article[];
   authors: AdminAuthor[];
   articleStats: Record<string, ArticleStat>;
+  blogAnalytics: BlogAnalytics;
   heroImageUrl: string | null;
   lineUrl: string | null;
   instagramUrl: string | null;
@@ -202,6 +208,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     articles: seedArticles,
     authors: [],
     articleStats: {},
+    blogAnalytics: EMPTY_BLOG_ANALYTICS,
     heroImageUrl: null,
     lineUrl: null,
     instagramUrl: null,
@@ -210,7 +217,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     tierInsiderMin: DEFAULT_TIER_MINS.insider,
   };
   try {
-    const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes, articles, authors, articleStats] = await Promise.all([
+    const [evRes, memRes, ledRes, rsvpRes, rwRes, setRes, articles, authors] = await Promise.all([
       supabase.from("events").select("*").order("date", { ascending: false }),
       supabase.from("members").select("id, name, country, joined, is_admin"),
       supabase.from("points_ledger").select("member_id, points"),
@@ -219,8 +226,12 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
       supabase.from("settings").select("*").eq("id", 1).maybeSingle(),
       getAdminArticles(supabase),
       getAdminAuthors(supabase),
-      getArticleStats(supabase),
     ]);
+
+    // Blog analytics need the article→category map, so they run after articles load.
+    const catBySlug: Record<string, string> = {};
+    for (const a of articles) catBySlug[a.slug] = a.category;
+    const { perArticle: articleStats, overview: blogAnalytics } = await getBlogStats(supabase, catBySlug);
 
     // ---- events ----
     const events = (evRes.data ?? []).map((r) => fromRow(r as Parameters<typeof fromRow>[0]));
@@ -332,7 +343,7 @@ export async function getAdminBundle(supabase: SupabaseClient): Promise<AdminBun
     const instagramUrl = (setRes.data?.instagram_url as string) || null;
     const discordUrl = (setRes.data?.discord_url as string) || null;
 
-    return { events, overview, members, rewards, articles, authors, articleStats, heroImageUrl, lineUrl, instagramUrl, discordUrl, tierRegularMin, tierInsiderMin };
+    return { events, overview, members, rewards, articles, authors, articleStats, blogAnalytics, heroImageUrl, lineUrl, instagramUrl, discordUrl, tierRegularMin, tierInsiderMin };
   } catch (e) {
     console.error("[getAdminBundle] failed:", (e as Error).message);
     return empty;

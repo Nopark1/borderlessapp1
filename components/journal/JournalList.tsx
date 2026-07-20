@@ -8,12 +8,13 @@ import { BlogHeader } from "./BlogHeader";
 import { blogCats } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import { trackEvent } from "@/lib/track";
-import type { Article, BlogCategory, Lang } from "@/lib/types";
+import { useBlogLang } from "@/lib/blog-lang";
+import type { Article, BlogCategory } from "@/lib/types";
 
 const CAT_KEYS = Object.keys(blogCats) as BlogCategory[];
 
 export function JournalList({ articles }: { articles: Article[] }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useBlogLang();
   const [cat, setCat] = useState<"all" | BlogCategory>("all");
   const list = cat === "all" ? articles : articles.filter((a) => a.category === cat);
 

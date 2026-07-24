@@ -1,12 +1,28 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
+const TITLE = "Borderless — Kyoto Cultural Gathering";
+const DESCRIPTION =
+  "An international circle in Kyoto hosting a new gathering every week — temples, ramen, rooftops and riverbanks. Come as you are.";
+
 export const metadata: Metadata = {
-  title: "Borderless — Kyoto Cultural Gathering",
-  description:
-    "An international circle in Kyoto hosting a new gathering every week — temples, ramen, rooftops and riverbanks. Come as you are.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
   applicationName: "Borderless",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Borderless" },
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "Borderless",
+    url: "/",
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: "en_US",
+    alternateLocale: "ja_JP",
+  },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

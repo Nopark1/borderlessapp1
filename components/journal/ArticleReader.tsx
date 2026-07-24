@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Cover } from "../Cover";
 import { Icon } from "../Icon";
 import { CatPill } from "./JournalParts";
@@ -9,25 +10,38 @@ import { BlogHeader } from "./BlogHeader";
 import { blogCats, avatarColor } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import { trackEvent, trafficSource } from "@/lib/track";
-import { useSiteLang, detectSiteLang } from "@/lib/lang";
+import { saveSiteLang } from "@/lib/lang";
 import type { Article, Lang } from "@/lib/types";
 
-export function ArticleReader({ article, more }: { article: Article; more: Article[] }) {
-  const [lang, setLang] = useSiteLang();
+export function ArticleReader({
+  article,
+  more,
+  pageLang,
+  enPath,
+  jaPath,
+}: {
+  article: Article;
+  more: Article[];
+  pageLang: Lang; // the URL's language (en at /journal, jp at /ja/journal)
+  enPath: string;
+  jaPath: string;
+}) {
+  const router = useRouter();
+  const lang = pageLang;
   const [shareMsg, setShareMsg] = useState("");
-  const langRef = useRef<Lang>(lang);
-  langRef.current = lang; // latest chosen language, read by beacons on leave
+  // The toggle navigates between the per-language URLs (and remembers the choice).
+  const setLang = (l: Lang) => { saveSiteLang(l); router.push(l === "jp" ? jaPath : enPath); };
   const cat = blogCats[article.category];
   const paras = (val(article.body, lang) || "").split(/\n\n+/).filter(Boolean);
   const imgs = article.attachments.filter((a) => a.type.startsWith("image/"));
   const files = article.attachments.filter((a) => !a.type.startsWith("image/"));
 
-  // Record a view (with traffic source + language) on open, and total *visible*
-  // time on leave (dwell). Sent via sendBeacon so it survives tab close.
-  // Admins are filtered out server-side.
+  // Record a view + total visible time (dwell). Admins are filtered out
+  // server-side. Language is fixed by the URL (hreflang tells Google which is
+  // which) — no auto-redirect, which Google discourages and which would bounce
+  // its renderer between languages.
   useEffect(() => {
-    // record the language actually served (detected before the toggle re-renders)
-    trackEvent(article.slug, "view", { source: trafficSource(), lang: detectSiteLang() });
+    trackEvent(article.slug, "view", { source: trafficSource(), lang: pageLang });
     let visibleStart = typeof document !== "undefined" && document.visibilityState === "visible" ? Date.now() : 0;
     let acc = 0;
     let done = false;
@@ -41,7 +55,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
     const send = () => {
       if (done) return;
       if (visibleStart) { acc += Date.now() - visibleStart; visibleStart = 0; }
-      if (acc >= 1000) trackEvent(article.slug, "dwell", { ms: acc, lang: langRef.current });
+      if (acc >= 1000) trackEvent(article.slug, "dwell", { ms: acc, lang: pageLang });
       done = true;
     };
     document.addEventListener("visibilitychange", onVis);
@@ -51,6 +65,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
       window.removeEventListener("pagehide", send);
       send();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article.slug]);
 
   // Read completion: fire once when the reader scrolls near the bottom.
@@ -62,12 +77,13 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
       const full = document.documentElement.scrollHeight;
       if (full > 0 && scrolled >= full * 0.9) {
         fired = true;
-        trackEvent(article.slug, "complete", { lang: langRef.current });
+        trackEvent(article.slug, "complete", { lang: pageLang });
         window.removeEventListener("scroll", onScroll);
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article.slug]);
 
   async function share() {
@@ -103,7 +119,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
         <div style={{ position: "relative", padding: "0 20px", marginTop: 8 }}>
           <div style={{ borderRadius: "var(--radius)", overflow: "hidden", position: "relative" }}>
             <Cover seed={article.cover} h={260} dim={0.12}>
-              <Link href="/journal" title={t("journalNav", lang)} style={{ position: "absolute", top: 14, left: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, textDecoration: "none" }}>
+              <Link href={pageLang === "jp" ? "/ja/journal" : "/journal"} title={t("journalNav", lang)} style={{ position: "absolute", top: 14, left: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, textDecoration: "none" }}>
                 <Icon name="arrowL" size={19} color="var(--ink)" />
               </Link>
               <button onClick={share} title={lang === "jp" ? "共有" : "Share"} style={{ position: "absolute", top: 14, right: 14, width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,.92)", border: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5 }}>
@@ -176,7 +192,7 @@ export function ArticleReader({ article, more }: { article: Article; more: Artic
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 17, marginBottom: 14 }}>{t("moreReading", lang)}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {more.map((m) => (
-                  <Link key={m.id} href={`/journal/${m.slug}`} onClick={() => trackEvent(article.slug, "readnext")} className="tap-card" style={{ display: "flex", gap: 13, alignItems: "center", textDecoration: "none" }}>
+                  <Link key={m.id} href={pageLang === "jp" ? `/ja/journal/${m.slug}` : `/journal/${m.slug}`} onClick={() => trackEvent(article.slug, "readnext")} className="tap-card" style={{ display: "flex", gap: 13, alignItems: "center", textDecoration: "none" }}>
                     <div style={{ flex: "0 0 68px" }}><Cover seed={m.cover} h={68} radius={11} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <CatPill catKey={m.category} lang={lang} />

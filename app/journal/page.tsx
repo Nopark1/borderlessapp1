@@ -8,7 +8,10 @@ export const revalidate = 60;
 export const metadata = {
   title: "Blog — Borderless Kyoto",
   description: "Field notes on living, working & building a life in Japan — from the Borderless circle in Kyoto.",
-  alternates: { canonical: "/journal" },
+  alternates: {
+    canonical: "/journal",
+    languages: { en: "/journal", ja: "/ja/journal", "x-default": "/journal" },
+  },
   openGraph: {
     type: "website",
     url: "/journal",
@@ -22,7 +25,7 @@ export default async function JournalPage() {
   const articles = await getPublishedArticles();
   return (
     <main className="stage">
-      <JournalList articles={articles} />
+      <JournalList articles={articles} pageLang="en" />
     </main>
   );
 }

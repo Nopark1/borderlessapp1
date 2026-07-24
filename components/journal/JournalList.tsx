@@ -2,21 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Cover } from "../Cover";
 import { CatPill, Byline } from "./JournalParts";
 import { BlogHeader } from "./BlogHeader";
 import { blogCats } from "@/lib/data";
 import { t, val, fmtDate } from "@/lib/i18n";
 import { trackEvent } from "@/lib/track";
-import { useSiteLang } from "@/lib/lang";
-import type { Article, BlogCategory } from "@/lib/types";
+import { saveSiteLang } from "@/lib/lang";
+import type { Article, BlogCategory, Lang } from "@/lib/types";
 
 const CAT_KEYS = Object.keys(blogCats) as BlogCategory[];
+const EN_PATH = "/journal";
+const JA_PATH = "/ja/journal";
 
-export function JournalList({ articles }: { articles: Article[] }) {
-  const [lang, setLang] = useSiteLang();
+export function JournalList({ articles, pageLang }: { articles: Article[]; pageLang: Lang }) {
+  const router = useRouter();
+  const lang = pageLang;
   const [cat, setCat] = useState<"all" | BlogCategory>("all");
   const list = cat === "all" ? articles : articles.filter((a) => a.category === cat);
+  const setLang = (l: Lang) => { saveSiteLang(l); router.push(l === "jp" ? JA_PATH : EN_PATH); };
+  // article links carry the current language prefix
+  const hrefFor = (slug: string) => (pageLang === "jp" ? `/ja/journal/${slug}` : `/journal/${slug}`);
 
   // one impression per article per list visit (the server drops admin traffic)
   const logged = useRef(false);
@@ -49,7 +56,7 @@ export function JournalList({ articles }: { articles: Article[] }) {
           <div style={{ textAlign: "center", color: "var(--ink-faint)", fontSize: 13.5, fontWeight: 600, padding: "48px 0" }}>{t("emptyJournal", lang)}</div>
         ) : (
           list.map((a, i) => (
-            <Link key={a.id} href={`/journal/${a.slug}`} className="tap-card" style={{ display: "block", textDecoration: "none" }}>
+            <Link key={a.id} href={hrefFor(a.slug)} className="tap-card" style={{ display: "block", textDecoration: "none" }}>
               <article style={{ display: "flex", gap: 16, padding: "22px 0", borderBottom: i < list.length - 1 ? "1px solid var(--ink)" : "0", alignItems: "flex-start" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <CatPill catKey={a.category} lang={lang} />

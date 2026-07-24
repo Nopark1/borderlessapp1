@@ -141,7 +141,7 @@ export function PublicSite({
               </button>
               <Link
                 className="btn"
-                href="/journal"
+                href={lang === "jp" ? "/ja/journal" : "/journal"}
                 style={{ background: "rgba(255,255,255,.16)", color: "#fff", backdropFilter: "blur(4px)", borderColor: "rgba(255,255,255,.35)" }}
               >
                 <Icon name="edit" size={15} color="#fff" /> {t("journalNav", lang)}

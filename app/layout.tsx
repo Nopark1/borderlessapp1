@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     alternateLocale: "ja_JP",
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  // Google Search Console verification — set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+  // (the token from the "HTML tag" method) in the environment to enable.
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

@@ -12,14 +12,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/journal`, changeFrequency: "daily", priority: 0.8 },
+    { url: `${SITE_URL}/ja/journal`, changeFrequency: "daily", priority: 0.7 },
   ];
 
-  const articlePages: MetadataRoute.Sitemap = articles.map((a) => ({
-    url: `${SITE_URL}/journal/${a.slug}`,
-    lastModified: new Date(`${a.date}T00:00:00Z`),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  const articlePages: MetadataRoute.Sitemap = articles.map((a) => {
+    const hasJp = !!(a.title.jp && a.body.jp);
+    return {
+      url: `${SITE_URL}/journal/${a.slug}`,
+      lastModified: new Date(`${a.date}T00:00:00Z`),
+      changeFrequency: "weekly",
+      priority: 0.7,
+      alternates: hasJp
+        ? { languages: { en: `${SITE_URL}/journal/${a.slug}`, ja: `${SITE_URL}/ja/journal/${a.slug}` } }
+        : undefined,
+    };
+  });
+
+  const jaArticlePages: MetadataRoute.Sitemap = articles
+    .filter((a) => a.title.jp && a.body.jp)
+    .map((a) => ({
+      url: `${SITE_URL}/ja/journal/${a.slug}`,
+      lastModified: new Date(`${a.date}T00:00:00Z`),
+      changeFrequency: "weekly",
+      priority: 0.7,
+      alternates: { languages: { en: `${SITE_URL}/journal/${a.slug}`, ja: `${SITE_URL}/ja/journal/${a.slug}` } },
+    }));
 
   const eventPages: MetadataRoute.Sitemap = events.map((e) => ({
     url: `${SITE_URL}/events/${e.slug}`,
@@ -28,5 +45,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...articlePages, ...eventPages];
+  return [...staticPages, ...articlePages, ...jaArticlePages, ...eventPages];
 }

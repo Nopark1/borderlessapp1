@@ -21,6 +21,12 @@ export function detectSiteLang(): Lang {
   }
 }
 
+/** Persist a language choice (used when the Blog toggle navigates between the
+ *  per-language article URLs). */
+export function saveSiteLang(l: Lang): void {
+  try { localStorage.setItem(LANG_KEY, l); } catch { /* ignore */ }
+}
+
 export function useSiteLang(): [Lang, (l: Lang) => void] {
   const [lang, setLang] = useState<Lang>("en"); // matches SSR; resolved on mount
   useEffect(() => {
